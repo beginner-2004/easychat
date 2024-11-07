@@ -65,7 +65,7 @@ Temporary Items
 
 CodeGenerator.java
 TestController.java
-application-test.properties
+application-prod.properties
 application-my-prod.properties
 application-remote-prod.properties
 application-my-test.properties
