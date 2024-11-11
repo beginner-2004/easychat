@@ -43,7 +43,7 @@
         <mybatis-plus-boot-starter.version>3.4.0</mybatis-plus-boot-starter.version>
         <jsoup.version>1.15.3</jsoup.version>
         <okhttp.version>4.8.1</okhttp.version>
-        <redisson-spring-boot-starter.version>3.17.1</redisson-spring-boot-starter.version>
+        <redisson-spring-boot-starter.version>3.17.6</redisson-spring-boot-starter.version>
     </properties>
 
     <dependencyManagement>
