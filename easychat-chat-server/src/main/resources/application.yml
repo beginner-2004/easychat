@@ -24,9 +24,10 @@ spring:
 #      maximum-pool-size: 10
 #      max-lifetime: 30000   #不能小于30秒，否则默认回到1800秒
 #      connection-test-query: SELECT 1
-#  mvc:
-#    pathmatch:
-#      matching-strategy: ANT_PATH_MATCHER
+  # 解决 spring 2.6 和 knife4j 不兼容问题
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
   redis:
     # Redis服务器地址
     host: ${easychat.redis.host}
