@@ -41,8 +41,8 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: true
-#jwt:
-#  secret: ${easychat.jwt.secret}
+jwt:
+  secret: ${easychat.jwt.secret}
 wx:
   mp:
     #    callback: http://f4cd-113-92-129-127.ngrok.io

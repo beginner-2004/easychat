@@ -1,6 +1,8 @@
 package com.wang.easychat.common.user.service.handler;
 
 
+import com.wang.easychat.common.user.service.WXMsgService;
+import com.wang.easychat.common.user.service.adapter.TextBuilder;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.common.session.WxSessionManager;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -18,8 +20,8 @@ import java.util.Map;
  **/
 @Component
 public class SubscribeHandler extends AbstractHandler {
-//    @Autowired
-//    private WxMsgService wxMsgService;
+    @Autowired
+    private WXMsgService wxMsgService;
 
     @Override
     public WxMpXmlOutMessage handle(WxMpXmlMessage wxMessage,
@@ -27,10 +29,9 @@ public class SubscribeHandler extends AbstractHandler {
                                     WxSessionManager sessionManager) throws WxErrorException {
 
         this.logger.info("新关注用户 OPENID: " + wxMessage.getFromUser());
-
         WxMpXmlOutMessage responseResult = null;
         try {
-//            responseResult = this.handleSpecial(weixinService, wxMessage);
+            responseResult = wxMsgService.scan(wxMessage);
         } catch (Exception e) {
             this.logger.error(e.getMessage(), e);
         }
@@ -40,7 +41,7 @@ public class SubscribeHandler extends AbstractHandler {
         }
 
         try {
-//            return new TextBuilder().build("感谢关注", wxMessage, weixinService);
+            return new TextBuilder().build("感谢关注", wxMessage);
         } catch (Exception e) {
             this.logger.error(e.getMessage(), e);
         }

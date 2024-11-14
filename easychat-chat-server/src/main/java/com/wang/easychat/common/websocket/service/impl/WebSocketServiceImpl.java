@@ -4,6 +4,11 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.wang.easychat.common.common.constant.RedisKey;
+import com.wang.easychat.common.common.utils.RedisUtils;
+import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.service.IUserService;
+import com.wang.easychat.common.user.service.LoginService;
 import com.wang.easychat.common.websocket.domain.dto.WSChannelExtraDTO;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
@@ -32,6 +37,10 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     @Autowired
     private WxMpService wxMpService;
+    @Autowired
+    private IUserService userService;
+    @Autowired
+    private LoginService loginService;
 
     /**
      * 管理所有用户的连接(登录用户/游客)
@@ -67,6 +76,60 @@ public class WebSocketServiceImpl implements WebSocketService {
         channel.writeAndFlush(new TextWebSocketFrame(JSONUtil.toJsonStr(resp)));
     }
 
+    @Override
+    public void remove(Channel channel) {
+        WSChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
+        if (Objects.nonNull(wsChannelExtraDTO)){
+            ONLINE_WS_MAP.remove(channel);
+            Long uid = wsChannelExtraDTO.getUid();
+            RedisUtils.del(RedisKey.getKey(RedisKey.USER_TOKEN_STRING, uid));
+        }
+
+        // todo 用户下线
+    }
+
+    @Override
+    public void scanLoginSuccess(Integer code, Long uid) {
+        if (Objects.isNull(code)){
+            return;
+        }
+        // 确认链接在机器上
+        Channel channel = WAIT_LOGIN_MAP.getIfPresent(code);
+        if (Objects.isNull(channel)){
+            return;
+        }
+        User user = userService.getById(uid);
+        // 移除code
+        WAIT_LOGIN_MAP.invalidate(code);
+        RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, uid));
+        // 调用登录模块获取token
+        String token = loginService.login(uid);
+        // 用户登录
+        loginSuccess(channel, user, token);
+    }
+
+    @Override
+    public void authorize(Channel channel, String token) {
+        Long validUid = loginService.getValidUid(token);
+        if (Objects.nonNull(validUid)){
+            User user = userService.getById(validUid);
+            loginSuccess(channel, user, token);
+
+        }else {
+            sendMsg(channel, WebSocektAdapter.buildInvalidTokenResp());
+        }
+    }
+
+    private void loginSuccess(Channel channel, User user, String token) {
+        // 保存 channel 对应 uid
+        WSChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
+        wsChannelExtraDTO.setUid(user.getId());
+        // todo 用户上线成功的事件
+
+        // 推送成功消息
+        sendMsg(channel, WebSocektAdapter.buildResp(user, token));
+    }
+
     /**
      * 将 随机码 和 channel 绑定在一起
      * @param channel
@@ -76,7 +139,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         Integer code;
         do {
             code = RandomUtil.randomInt(Integer.MAX_VALUE);
-        }while (Objects.isNull(WAIT_LOGIN_MAP.asMap().putIfAbsent(code, channel))); // 如果不存在这个随机码，返回null，跳出循环
+        }while (Objects.nonNull(WAIT_LOGIN_MAP.asMap().putIfAbsent(code, channel))); // 如果不存在这个随机码，返回null，跳出循环
 
         return code;
     }

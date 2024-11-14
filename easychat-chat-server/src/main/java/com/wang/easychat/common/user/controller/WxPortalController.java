@@ -1,5 +1,6 @@
 package com.wang.easychat.common.user.controller;
 
+import com.wang.easychat.common.user.service.WXMsgService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
@@ -28,6 +29,10 @@ public class WxPortalController {
 
     @Autowired
     private WxMpService wxMpService;
+
+    @Autowired
+    private WXMsgService wxMsgService;
+
     @GetMapping("/test")
     public String getQrCode(@RequestParam Integer code) throws WxErrorException {
         WxMpQrCodeTicket wxMpQrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateTmpTicket(code, 10000);
@@ -60,11 +65,12 @@ public class WxPortalController {
     }
 
     @GetMapping("/callBack")
-    public RedirectView callBack(@RequestParam String code) throws WxErrorException {
+    public String callBack(@RequestParam String code) throws WxErrorException {
         WxOAuth2AccessToken accessToken = wxMpService.getOAuth2Service().getAccessToken(code);
-        WxOAuth2UserInfo zh_cn = wxMpService.getOAuth2Service().getUserInfo(accessToken, "zh_CN");
-        System.out.println(zh_cn);
-        return null;
+        WxOAuth2UserInfo userInfo = wxMpService.getOAuth2Service().getUserInfo(accessToken, "zh_CN");
+        wxMsgService.authorize(userInfo);
+
+        return "<h1>登录成功！<h1/>";
     }
 
     @PostMapping(produces = "application/xml; charset=UTF-8")
