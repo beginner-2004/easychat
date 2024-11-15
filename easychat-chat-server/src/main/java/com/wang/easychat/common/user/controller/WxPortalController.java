@@ -33,14 +33,6 @@ public class WxPortalController {
     @Autowired
     private WXMsgService wxMsgService;
 
-    @GetMapping("/test")
-    public String getQrCode(@RequestParam Integer code) throws WxErrorException {
-        WxMpQrCodeTicket wxMpQrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateTmpTicket(code, 10000);
-        String url = wxMpQrCodeTicket.getUrl();
-        System.out.println(url);
-        return url;
-    }
-
     private final WxMpService wxService;
     private final WxMpMessageRouter messageRouter;
 

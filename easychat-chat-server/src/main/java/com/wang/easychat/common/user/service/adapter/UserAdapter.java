@@ -1,7 +1,9 @@
 package com.wang.easychat.common.user.service.adapter;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 
 /**
@@ -27,5 +29,13 @@ public class UserAdapter {
             user.setName(userInfo.getNickname());
         }
         return user;
+    }
+
+    public static UserInfoResp buildUserInfo(User user, Integer modifyNameCount) {
+        UserInfoResp vo = new UserInfoResp();
+        BeanUtil.copyProperties(user, vo);
+        vo.setId(user.getId());
+        vo.setModifyNameChance(modifyNameCount);
+        return vo;
     }
 }

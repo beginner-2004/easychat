@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IUserBackpackService extends IService<UserBackpack> {
 
+    Integer getCountByValidItemId(Long uid, Long id);
 }
