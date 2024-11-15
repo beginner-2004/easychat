@@ -1,7 +1,10 @@
 package com.wang.easychat.common.user.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.wang.easychat.common.common.exception.BusinessException;
+import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.entity.UserBackpack;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
 import com.wang.easychat.common.user.mapper.UserMapper;
@@ -13,6 +16,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 /**
  * <p>
@@ -51,13 +56,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void modifyName(Long uid, String name) {
-        if (StrUtil.isBlank(name)){
-
+        User oldUser = getbyName(name);
+        AssertUtil.isEmpty(oldUser, "名字已经被抢占了，请换一个！");
+        UserBackpack modifyNameItem = userBackpackService.getFirstValidItem(uid, ItemEnum.MODIFY_NAME_CARD.getId());
+        AssertUtil.isNotEmpty(modifyNameItem, "改名卡数量不足，等待后续活动发放改名卡吧");
+        // 使用改名卡
+        // 数据库级别乐观锁
+        boolean isSuccess = userBackpackService.useItem(modifyNameItem);
+        if (isSuccess) {
+            // 改名
+            lambdaUpdate()
+                    .eq(User::getId, uid)
+                    .set(User::getName, name)
+                    .update();
         }
-        if (name.length() > 6){
+    }
 
-        }
+    private User getbyName(String name) {
+        return lambdaQuery().eq(User::getName, name).one();
     }
 }
 

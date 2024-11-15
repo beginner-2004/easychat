@@ -20,11 +20,32 @@ import org.springframework.stereotype.Service;
 public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, UserBackpack> implements IUserBackpackService {
 
     @Override
-    public Integer getCountByValidItemId(Long uid, Long id) {
+    public Integer getCountByValidItemId(Long uid, Long itemId) {
         return lambdaQuery()
                 .eq(UserBackpack::getUid, uid)
-                .eq(UserBackpack::getItemId, id)
+                .eq(UserBackpack::getItemId, itemId)
                 .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
                 .count();
+    }
+
+    @Override
+    public UserBackpack getFirstValidItem(Long uid, Long itemId) {
+        return lambdaQuery()
+                .eq(UserBackpack::getUid, uid)
+                .eq(UserBackpack::getItemId, itemId)
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
+                .orderByAsc(UserBackpack::getId)
+                .last("limit 1")
+                .one();
+
+    }
+
+    @Override
+    public boolean useItem(UserBackpack item) {
+        return lambdaUpdate()
+                .eq(UserBackpack::getItemId, item.getId())
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
+                .set(UserBackpack::getStatus, YesOrNoEnum.YES)
+                .update();
     }
 }

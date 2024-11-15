@@ -14,4 +14,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IUserBackpackService extends IService<UserBackpack> {
 
     Integer getCountByValidItemId(Long uid, Long id);
+
+    UserBackpack getFirstValidItem(Long uid, Long id);
+
+    boolean useItem(UserBackpack modifyNameItem);
 }
