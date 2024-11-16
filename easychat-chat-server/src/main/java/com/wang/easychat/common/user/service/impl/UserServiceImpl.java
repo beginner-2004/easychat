@@ -3,21 +3,29 @@ package com.wang.easychat.common.user.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.wang.easychat.common.common.exception.BusinessException;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.user.domain.entity.ItemConfig;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.entity.UserBackpack;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
+import com.wang.easychat.common.user.domain.enums.ItemTypeEnum;
+import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
 import com.wang.easychat.common.user.mapper.UserMapper;
+import com.wang.easychat.common.user.service.IItemConfigService;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wang.easychat.common.user.service.adapter.UserAdapter;
+import com.wang.easychat.common.user.service.cache.ItemCache;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -32,6 +40,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private IUserBackpackService userBackpackService;
+    @Autowired
+    private ItemCache itemCache;
+    @Autowired
+    private IItemConfigService itemConfigService;
 
     public User getByOpenId(String openId) {
         return lambdaQuery()
@@ -72,6 +84,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                     .set(User::getName, name)
                     .update();
         }
+    }
+
+    @Override
+    public List<BadgeResp> badges(Long uid) {
+        // 查询所有徽章
+        List<ItemConfig> itemConfigs = itemCache.getByType(ItemTypeEnum.BADGE.getType());
+        // 查询用户拥有的徽章
+        List<UserBackpack> backpacks = userBackpackService.getByItemIds(uid,
+                itemConfigs.stream().map(ItemConfig::getId).collect(Collectors.toList()));
+        // 用户当前佩戴的徽章
+        User user = getById(uid);
+        return UserAdapter.buidBadgeResp(itemConfigs, backpacks, user);
+    }
+
+    @Override
+    public void wearingBadge(Long uid, Long itemId) {
+        // 确保有徽章
+        UserBackpack firstValidItem = userBackpackService.getFirstValidItem(uid, itemId);
+        AssertUtil.isNotEmpty(firstValidItem, "你还没有这个徽章，快去获得吧");
+        // 确保这个物品是徽章
+        ItemConfig itemConfig = itemConfigService.getById(firstValidItem.getItemId());
+        AssertUtil.equal(itemConfig.getType(), ItemTypeEnum.BADGE.getType(), "只有徽章才能佩戴");
+
+        lambdaUpdate()
+                .eq(User::getId, uid)
+                .set(User::getItemId, itemId)
+                .update();
     }
 
     private User getbyName(String name) {

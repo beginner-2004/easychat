@@ -8,6 +8,8 @@ import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * <p>
  * 用户背包表 服务实现类
@@ -47,5 +49,14 @@ public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, Use
                 .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
                 .set(UserBackpack::getStatus, YesOrNoEnum.YES)
                 .update();
+    }
+
+    @Override
+    public List<UserBackpack> getByItemIds(Long uid, List<Long> itemIds) {
+        return lambdaQuery()
+                .eq(UserBackpack::getUid, uid)
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
+                .in(UserBackpack::getItemId, itemIds)
+                .list();
     }
 }

@@ -1,5 +1,6 @@
 package com.wang.easychat.common.user.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class ItemConfig implements Serializable {
     private String img;
 
     @ApiModelProperty(value = "物品功能描述")
+    @TableField("`describe`")
     private String describe;
 
     @ApiModelProperty(value = "创建时间")

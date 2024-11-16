@@ -36,7 +36,7 @@ public class UserBackpack implements Serializable {
     private Long uid;
 
     @ApiModelProperty(value = "物品id")
-    private Integer itemId;
+    private Long itemId;
 
     @ApiModelProperty(value = "使用状态 0.待使用 1已使用")
     private Integer status;
