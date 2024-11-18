@@ -7,8 +7,7 @@ import java.time.LocalDateTime;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
@@ -24,6 +23,9 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TableName("user_backpack")
 @ApiModel(value="UserBackpack对象", description="用户背包表")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserBackpack implements Serializable {
 
     private static final long serialVersionUID = 1L;

@@ -1,6 +1,7 @@
 package com.wang.easychat.common.user.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.exception.BusinessException;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.ItemConfig;
@@ -69,6 +70,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @RedissonLock(key = "#uid")
     public void modifyName(Long uid, String name) {
         User oldUser = getbyName(name);
         AssertUtil.isEmpty(oldUser, "名字已经被抢占了，请换一个！");

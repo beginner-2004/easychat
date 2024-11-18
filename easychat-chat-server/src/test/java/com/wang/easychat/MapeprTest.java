@@ -1,10 +1,10 @@
 package com.wang.easychat;
 
 import com.wang.easychat.common.EasychatCustomApplication;
-import com.wang.easychat.common.common.thread.MyUncaughtExceptionHander;
 import com.wang.easychat.common.common.utils.JwtUtils;
-import com.wang.easychat.common.common.utils.RedisUtils;
-import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.IdemporentEnum;
+import com.wang.easychat.common.user.domain.enums.ItemEnum;
+import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +30,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @Slf4j
 public class MapeprTest {
+
+    public static final Long UID = 20002L;
+
     @Autowired
     private WxMpService wxMpService;
     @Autowired
     private JwtUtils jwtUtils;
     @Autowired
-    private RedisTemplate redisTemplate;
+    private IUserBackpackService userBackpackService;
     @Autowired
     private RedissonClient redissonClient;
     @Autowired
@@ -82,5 +85,10 @@ public class MapeprTest {
         WxMpQrCodeTicket wxMpQrCodeTicket = wxMpService.getQrcodeService().qrCodeCreateTmpTicket(1, 10000);
         String url = wxMpQrCodeTicket.getUrl();
         System.out.println(url);
+    }
+
+    @Test
+    public void acquireItem(){
+        userBackpackService.acquireItem(UID, ItemEnum.REG_TOP10_BADGE.getId(), IdemporentEnum.UID, UID+"");
     }
 }
