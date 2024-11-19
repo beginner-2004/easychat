@@ -49,7 +49,7 @@ public class ThreadPoolConfig implements AsyncConfigurer {
         return executor;
     }
 
-    /*@Bean(WS_EXECUTOR)
+    @Bean(WS_EXECUTOR)
     public ThreadPoolTaskExecutor websocketExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(16);
@@ -62,7 +62,7 @@ public class ThreadPoolConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(AICHAT_EXECUTOR)
+    /*@Bean(AICHAT_EXECUTOR)
     public ThreadPoolTaskExecutor chatAiExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);

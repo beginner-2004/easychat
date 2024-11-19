@@ -1,5 +1,6 @@
 package com.wang.easychat.common.websocket.service;
 
+import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
 import io.netty.channel.Channel;
 
 /**
@@ -17,4 +18,6 @@ public interface WebSocketService {
     void scanLoginSuccess(Integer code, Long uid);
 
     void authorize(Channel channel, String token);
+
+    void sendMsgToAll(WSBaseResp<?> msg);
 }

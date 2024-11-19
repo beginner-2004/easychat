@@ -32,6 +32,9 @@ public class Black implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    /**
+     * @see com.wang.easychat.common.user.domain.enums.BlackTypeEnum
+     */
     @ApiModelProperty(value = "拉黑目标类型 1.ip 2uid")
     private Integer type;
 

@@ -9,6 +9,9 @@ import com.wang.easychat.common.common.event.UserOnLineEvent;
 import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.entity.IpInfo;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.RoleEnum;
+import com.wang.easychat.common.user.service.IRoleService;
+import com.wang.easychat.common.user.service.IUserRoleService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
 import com.wang.easychat.common.websocket.NettyUtil;
@@ -24,7 +27,9 @@ import lombok.SneakyThrows;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -48,6 +53,11 @@ public class WebSocketServiceImpl implements WebSocketService {
     private LoginService loginService;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
+    private IRoleService roleService;
+    @Autowired
+    @Qualifier("websocketExecutor")
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
      * 管理所有用户的连接(登录用户/游客)
@@ -127,13 +137,20 @@ public class WebSocketServiceImpl implements WebSocketService {
         }
     }
 
+    @Override
+    public void sendMsgToAll(WSBaseResp<?> msg) {
+        ONLINE_WS_MAP.forEach(((channel, ext) -> {
+            threadPoolTaskExecutor.execute(() -> sendMsg(channel, msg));
+        }));
+    }
+
     private void loginSuccess(Channel channel, User user, String token) {
         // 保存 channel 对应 uid
         WSChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
         wsChannelExtraDTO.setUid(user.getId());
 
         // 推送成功消息
-        sendMsg(channel, WebSocektAdapter.buildResp(user, token));
+        sendMsg(channel, WebSocektAdapter.buildResp(user, token,  roleService.hasPower(user.getId(), RoleEnum.CHAT_MANAGER)));
         RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, user.getId()));
 
         // todo 用户上线成功的事件

@@ -2,6 +2,7 @@ package com.wang.easychat.common.user.service;
 
 import com.wang.easychat.common.user.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wang.easychat.common.user.domain.vo.req.BlackReq;
 import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
 import org.springframework.stereotype.Service;
@@ -29,4 +30,8 @@ public interface IUserService extends IService<User> {
     List<BadgeResp> badges(Long uid);
 
     void wearingBadge(Long uid, Long itemId);
+
+    void black(BlackReq req);
+
+    void invalidUid(Long id);
 }

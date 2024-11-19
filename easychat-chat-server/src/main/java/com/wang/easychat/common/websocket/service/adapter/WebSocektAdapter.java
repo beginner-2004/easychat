@@ -1,8 +1,10 @@
 package com.wang.easychat.common.websocket.service.adapter;
 
+import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
+import com.wang.easychat.common.websocket.domain.vo.resp.WSBlack;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSLoginSuccess;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSLoginUrl;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
@@ -21,7 +23,7 @@ public class WebSocektAdapter {
         return resp;
     }
 
-    public static WSBaseResp<?> buildResp(User user, String token) {
+    public static WSBaseResp<?> buildResp(User user, String token, boolean power) {
         WSBaseResp<WSLoginSuccess> resp = new WSBaseResp<>();
         resp.setType(WSRespTypeEnum.LOGIN_SUCCESS.getType());
         WSLoginSuccess wsLoginSuccess = WSLoginSuccess.builder()
@@ -29,7 +31,8 @@ public class WebSocektAdapter {
                 .avatar(user.getAvatar())
                 .token(token)
                 .uid(user.getId())
-                 .build();
+                .power(power ? YesOrNoEnum.YES.getStatus() : YesOrNoEnum.NO.getStatus())
+                .build();
 
         resp.setData(wsLoginSuccess);
         return resp;
@@ -46,6 +49,17 @@ public class WebSocektAdapter {
         WSBaseResp<String> resp = new WSBaseResp<>();
         resp.setType(WSRespTypeEnum.INVALIDATE_TOKEN.getType());
         resp.setData(WSRespTypeEnum.INVALIDATE_TOKEN.getDesc());
+        return resp;
+    }
+
+    public static WSBaseResp<?> buildBlack(User user) {
+        WSBaseResp<WSBlack> resp = new WSBaseResp<>();
+        resp.setType(WSRespTypeEnum.BLACK.getType());
+        WSBlack wsBlack = WSBlack.builder()
+                .uid(user.getId())
+                .build();
+
+        resp.setData(wsBlack);
         return resp;
     }
 }

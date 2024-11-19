@@ -2,29 +2,36 @@ package com.wang.easychat.common.user.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.wang.easychat.common.common.annotation.RedissonLock;
+import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
+import com.wang.easychat.common.common.event.UserBlackEvent;
 import com.wang.easychat.common.common.event.UserRegisterEvent;
 import com.wang.easychat.common.common.exception.BusinessException;
 import com.wang.easychat.common.common.utils.AssertUtil;
-import com.wang.easychat.common.user.domain.entity.ItemConfig;
-import com.wang.easychat.common.user.domain.entity.User;
-import com.wang.easychat.common.user.domain.entity.UserBackpack;
+import com.wang.easychat.common.user.domain.entity.*;
+import com.wang.easychat.common.user.domain.enums.BlackTypeEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.enums.ItemTypeEnum;
+import com.wang.easychat.common.user.domain.vo.req.BlackReq;
 import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
 import com.wang.easychat.common.user.mapper.UserMapper;
+import com.wang.easychat.common.user.service.IBlackService;
 import com.wang.easychat.common.user.service.IItemConfigService;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wang.easychat.common.user.service.adapter.UserAdapter;
 import com.wang.easychat.common.user.service.cache.ItemCache;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +43,7 @@ import java.util.stream.Collectors;
  * @since 2024-11-08
  */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     @Autowired
@@ -46,6 +54,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private IItemConfigService itemConfigService;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
+    private IBlackService blackService;
 
     public User getByOpenId(String openId) {
         return lambdaQuery()
@@ -115,6 +125,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .eq(User::getId, uid)
                 .set(User::getItemId, itemId)
                 .update();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void black(BlackReq req) {
+        Long uid = req.getUid();
+        Black blackUser = new Black();
+        blackUser.setType(BlackTypeEnum.UID.getType());
+        blackUser.setTarget(uid.toString());
+        blackService.save(blackUser);
+        User byId = getById(uid);
+        blackIp(Optional.ofNullable(byId.getIpInfo()).map(IpInfo::getCreateIp).orElse(null));
+        blackIp(Optional.ofNullable(byId.getIpInfo()).map(IpInfo::getUpdateIp).orElse(null));
+
+        applicationEventPublisher.publishEvent(new UserBlackEvent(this, byId));
+    }
+
+    @Override
+    public void invalidUid(Long id) {
+        lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getStatus, YesOrNoEnum.YES.getStatus())
+                .update();
+    }
+
+    /**
+     * 拉黑ip
+     * @param ip
+     */
+    private void blackIp(String ip) {
+        if (StringUtils.isBlank(ip)){
+            return;
+        }
+        try {
+            Black blackIp = new Black();
+            blackIp.setType(BlackTypeEnum.IP.getType());
+            blackIp.setTarget(ip);
+            blackService.save(blackIp);
+        }catch (Exception e){
+            log.error("duplicate black ip:{}", ip);
+        }
     }
 
     private User getbyName(String name) {
