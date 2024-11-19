@@ -60,7 +60,7 @@ public class WXMsgServiceImpl implements WXMsgService {
         boolean authorized = registered && StrUtil.isNotBlank(user.getAvatar());
         // 注册成功并且授权
         if (registered && authorized){
-            // todo 走登录成功逻辑 通过code找到channel推送消息
+            // 走登录成功逻辑 通过code找到channel推送消息
             webSocketService.scanLoginSuccess(code, user.getId());
             return TextBuilder.build("欢迎回来！" + user.getName(), wxMpXmlMessage);
         }

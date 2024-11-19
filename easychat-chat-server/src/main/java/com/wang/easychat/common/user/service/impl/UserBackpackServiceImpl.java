@@ -1,6 +1,7 @@
 package com.wang.easychat.common.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.service.LockService;
 import com.wang.easychat.common.common.utils.AssertUtil;
@@ -80,22 +81,24 @@ public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, Use
     @Override
     public void acquireItem(Long uid, Long itemId, IdemporentEnum idemporentEnum, String businessId) {
         String idempotent = getIdempotent(itemId, idemporentEnum, businessId);
-        lockService.excuteWithLock("acquireItem_" + idempotent, ()->{
-            UserBackpack userBackpack = getByIdempotent(idempotent);
-            if (Objects.nonNull(userBackpack)){
-                return;
-            }
-            // todo 业务检查
-            // 发放物品
-            UserBackpack insert = UserBackpack.builder()
-                    .uid(uid)
-                    .itemId(itemId)
-                    .status(YesOrNoEnum.NO.getStatus())
-                    .idempotent(idempotent)
-                    .build();
-            save(insert);
+        doAcquireItem(uid, itemId, idempotent);
+    }
+
+    @RedissonLock(key = "#idempotent", waitTime = 5000)
+    public void doAcquireItem(Long uid, Long itemId, String idempotent){
+        UserBackpack userBackpack = getByIdempotent(idempotent);
+        if (Objects.nonNull(userBackpack)){
             return;
-        });
+        }
+        // todo 业务检查
+        // 发放物品
+        UserBackpack insert = UserBackpack.builder()
+                .uid(uid)
+                .itemId(itemId)
+                .status(YesOrNoEnum.NO.getStatus())
+                .idempotent(idempotent)
+                .build();
+        save(insert);
     }
 
     public UserBackpack getByIdempotent(String idempotent) {

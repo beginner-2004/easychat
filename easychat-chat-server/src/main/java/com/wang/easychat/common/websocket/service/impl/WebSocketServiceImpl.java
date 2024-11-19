@@ -5,10 +5,13 @@ import cn.hutool.json.JSONUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wang.easychat.common.common.constant.RedisKey;
+import com.wang.easychat.common.common.event.UserOnLineEvent;
 import com.wang.easychat.common.common.utils.RedisUtils;
+import com.wang.easychat.common.user.domain.entity.IpInfo;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
+import com.wang.easychat.common.websocket.NettyUtil;
 import com.wang.easychat.common.websocket.domain.dto.WSChannelExtraDTO;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
@@ -21,9 +24,11 @@ import lombok.SneakyThrows;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,6 +46,8 @@ public class WebSocketServiceImpl implements WebSocketService {
     private IUserService userService;
     @Autowired
     private LoginService loginService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 管理所有用户的连接(登录用户/游客)
@@ -124,10 +131,15 @@ public class WebSocketServiceImpl implements WebSocketService {
         // 保存 channel 对应 uid
         WSChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
         wsChannelExtraDTO.setUid(user.getId());
-        // todo 用户上线成功的事件
 
         // 推送成功消息
         sendMsg(channel, WebSocektAdapter.buildResp(user, token));
+        RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, user.getId()));
+
+        // todo 用户上线成功的事件
+        user.setLastOptTime(new Date());
+        user.refreshIp(NettyUtil.getAttr(channel, NettyUtil.IP));
+        applicationEventPublisher.publishEvent(new UserOnLineEvent(this, user));
     }
 
     /**

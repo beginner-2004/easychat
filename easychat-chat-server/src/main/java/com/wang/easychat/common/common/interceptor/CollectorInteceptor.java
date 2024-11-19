@@ -24,7 +24,7 @@ public class CollectorInteceptor implements HandlerInterceptor {
                 .map(Long::parseLong)
                 .orElse(null);
         RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setIp(ServletUtil.getClientIP(request));
+        requestInfo.setIp(ServletUtil.getClientIP(request));    // 记录用户ip
         requestInfo.setUid(uid);
         RequestHolder.set(requestInfo);
         return true;

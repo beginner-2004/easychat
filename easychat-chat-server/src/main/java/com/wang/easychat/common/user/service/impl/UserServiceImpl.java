@@ -2,6 +2,7 @@ package com.wang.easychat.common.user.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.wang.easychat.common.common.annotation.RedissonLock;
+import com.wang.easychat.common.common.event.UserRegisterEvent;
 import com.wang.easychat.common.common.exception.BusinessException;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.ItemConfig;
@@ -18,14 +19,12 @@ import com.wang.easychat.common.user.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wang.easychat.common.user.service.adapter.UserAdapter;
 import com.wang.easychat.common.user.service.cache.ItemCache;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +44,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private ItemCache itemCache;
     @Autowired
     private IItemConfigService itemConfigService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public User getByOpenId(String openId) {
         return lambdaQuery()
@@ -56,7 +57,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Transactional
     public Long register(User insert) {
         save(insert);
-        // todo 用户注册事件
+        // 用户注册事件
+        applicationEventPublisher.publishEvent(new UserRegisterEvent(this, insert));
         return insert.getId();
 
     }

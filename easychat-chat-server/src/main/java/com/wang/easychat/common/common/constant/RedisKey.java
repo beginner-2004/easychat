@@ -21,4 +21,8 @@ public class RedisKey {
     public static String getKey(String key, Object... o){
         return BASE_KEY + String.format(key, o);
     }
+
+    public static String getAllKey(){
+        return BASE_KEY + "*";
+    }
 }

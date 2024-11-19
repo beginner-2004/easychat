@@ -1,7 +1,9 @@
 package com.wang.easychat;
 
 import com.wang.easychat.common.EasychatCustomApplication;
+import com.wang.easychat.common.common.constant.RedisKey;
 import com.wang.easychat.common.common.utils.JwtUtils;
+import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.enums.IdemporentEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.service.IUserBackpackService;
@@ -20,6 +22,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
 
 /**
  * @ClassDescription:
@@ -90,5 +94,10 @@ public class MapeprTest {
     @Test
     public void acquireItem(){
         userBackpackService.acquireItem(UID, ItemEnum.REG_TOP10_BADGE.getId(), IdemporentEnum.UID, UID+"");
+    }
+
+    @Test
+    public void delRedis(){
+        RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, 20009));
     }
 }
