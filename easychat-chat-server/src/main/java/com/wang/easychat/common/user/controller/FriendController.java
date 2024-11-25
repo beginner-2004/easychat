@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.stereotype.Controller;
 
+import javax.validation.Valid;
+
 /**
  * <p>
  * 用户联系人表 前端控制器
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Controller;
  * @since 2024-11-25
  */
 @Controller
-@RequestMapping("/user-friend")
+@RequestMapping("/capi/user/friend")
 public class FriendController {
-
 }
