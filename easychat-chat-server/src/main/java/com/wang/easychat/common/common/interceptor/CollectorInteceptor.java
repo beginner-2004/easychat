@@ -28,7 +28,8 @@ public class CollectorInteceptor implements HandlerInterceptor {
                 .map(Long::parseLong)
                 .orElse(null);
         RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setIp(ServletUtil.getClientIP(request));    // 记录用户ip
+        String clientIP = ServletUtil.getClientIP(request);
+        requestInfo.setIp(clientIP.equals("0:0:0:0:0:0:0:1") ? "127.0.0.1" : clientIP);    // 记录用户ip
         requestInfo.setUid(uid);
         RequestHolder.set(requestInfo);
         return true;

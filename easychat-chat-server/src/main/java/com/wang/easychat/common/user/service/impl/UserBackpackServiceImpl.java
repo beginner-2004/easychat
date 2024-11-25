@@ -61,7 +61,7 @@ public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, Use
         return lambdaUpdate()
                 .eq(UserBackpack::getItemId, item.getId())
                 .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
-                .set(UserBackpack::getStatus, YesOrNoEnum.YES)
+                .set(UserBackpack::getStatus, YesOrNoEnum.YES.getStatus())
                 .update();
     }
 

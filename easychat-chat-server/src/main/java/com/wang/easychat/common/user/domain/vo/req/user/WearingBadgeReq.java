@@ -1,4 +1,4 @@
-package com.wang.easychat.common.user.domain.vo.req;
+package com.wang.easychat.common.user.domain.vo.req.user;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,5 +16,5 @@ import javax.validation.constraints.NotNull;
 public class WearingBadgeReq {
     @ApiModelProperty("徽章id")
     @NotNull
-    private Long itemId;
+    private Long badgeId;
 }

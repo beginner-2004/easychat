@@ -2,9 +2,9 @@ package com.wang.easychat.common.user.service;
 
 import com.wang.easychat.common.user.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.wang.easychat.common.user.domain.vo.req.BlackReq;
-import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
-import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
+import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
+import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
+import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,4 +34,6 @@ public interface IUserService extends IService<User> {
     void black(BlackReq req);
 
     void invalidUid(Long id);
+
+    List<User> getFriendList(List<Long> friendUids);
 }

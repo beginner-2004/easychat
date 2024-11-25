@@ -1,4 +1,4 @@
-package com.wang.easychat.common.user.domain.vo.req;
+package com.wang.easychat.common.user.domain.vo.req.user;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

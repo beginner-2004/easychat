@@ -16,7 +16,8 @@ import java.io.IOException;
  **/
 @AllArgsConstructor
 public enum HttpErrorEnum {
-    ACCESS_DENIED(401, "登录失效，请重新登录");
+    ACCESS_DENIED(401, "登录失效，请重新登录"),
+    BLACK_DENIED(402, "由于您的不当操作，部分操作已被限制！解除请联系管理员");
 
     private Integer httpCode;
     private String desc;

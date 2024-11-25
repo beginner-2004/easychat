@@ -5,11 +5,11 @@ import com.wang.easychat.common.common.domain.vo.resp.ApiResult;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.common.utils.RequestHolder;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
-import com.wang.easychat.common.user.domain.vo.req.BlackReq;
-import com.wang.easychat.common.user.domain.vo.req.ModifyNameReq;
-import com.wang.easychat.common.user.domain.vo.req.WearingBadgeReq;
-import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
-import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
+import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
+import com.wang.easychat.common.user.domain.vo.req.user.ModifyNameReq;
+import com.wang.easychat.common.user.domain.vo.req.user.WearingBadgeReq;
+import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
+import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.IUserService;
 import io.swagger.annotations.Api;
@@ -60,7 +60,7 @@ public class UserController {
     @PutMapping("/badge")
     @ApiOperation("佩戴徽章")
     public ApiResult<Void> wearingBadge(@Valid @RequestBody WearingBadgeReq req){
-        userService.wearingBadge(RequestHolder.get().getUid(), req.getItemId());
+        userService.wearingBadge(RequestHolder.get().getUid(), req.getBadgeId());
         return ApiResult.success();
     }
 

@@ -29,7 +29,7 @@ public class RedissonLockAspect {
 
     @Around("@annotation(redissonLock)")
     public Object around(ProceedingJoinPoint joinPoint, RedissonLock redissonLock) throws Throwable {
-        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();   // UserServiceImpl.modifyName
+        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String prefix = StringUtils.isBlank(redissonLock.prefixKey()) ? SpElUtils.getMethodKey(method) : redissonLock.prefixKey();
         String key = SpElUtils.parseSpEl(method, joinPoint.getArgs(), redissonLock.key());
         return lockService.excuteWithLock(prefix + key, redissonLock.waitTime(), redissonLock.unit(), joinPoint::proceed);

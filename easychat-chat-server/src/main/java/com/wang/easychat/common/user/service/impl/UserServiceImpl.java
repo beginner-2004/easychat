@@ -9,9 +9,9 @@ import com.wang.easychat.common.user.domain.entity.*;
 import com.wang.easychat.common.user.domain.enums.BlackTypeEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.enums.ItemTypeEnum;
-import com.wang.easychat.common.user.domain.vo.req.BlackReq;
-import com.wang.easychat.common.user.domain.vo.resp.BadgeResp;
-import com.wang.easychat.common.user.domain.vo.resp.UserInfoResp;
+import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
+import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
+import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import com.wang.easychat.common.user.mapper.UserMapper;
 import com.wang.easychat.common.user.service.IBlackService;
 import com.wang.easychat.common.user.service.IItemConfigService;
@@ -22,10 +22,8 @@ import com.wang.easychat.common.user.service.adapter.UserAdapter;
 import com.wang.easychat.common.user.service.cache.ItemCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -147,6 +145,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .eq(User::getId, id)
                 .set(User::getStatus, YesOrNoEnum.YES.getStatus())
                 .update();
+    }
+
+    @Override
+    public List<User> getFriendList(List<Long> friendUids) {
+        return lambdaQuery()
+                .in(User::getId, friendUids)
+                .select(User::getId, User::getName, User::getAvatar)
+                .list();
     }
 
     /**
