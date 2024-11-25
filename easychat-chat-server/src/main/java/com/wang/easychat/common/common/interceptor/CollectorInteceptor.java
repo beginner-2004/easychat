@@ -3,6 +3,8 @@ package com.wang.easychat.common.common.interceptor;
 import cn.hutool.extra.servlet.ServletUtil;
 import com.wang.easychat.common.common.domain.dto.RequestInfo;
 import com.wang.easychat.common.common.utils.RequestHolder;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,6 +18,8 @@ import java.util.Optional;
  * @Date: 2024/11/15
  **/
 @Component
+@Order(1)
+@Slf4j
 public class CollectorInteceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

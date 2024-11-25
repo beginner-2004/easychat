@@ -1,11 +1,9 @@
 package com.wang.easychat.common.user.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.event.UserBlackEvent;
 import com.wang.easychat.common.common.event.UserRegisterEvent;
-import com.wang.easychat.common.common.exception.BusinessException;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.*;
 import com.wang.easychat.common.user.domain.enums.BlackTypeEnum;
@@ -24,13 +22,14 @@ import com.wang.easychat.common.user.service.adapter.UserAdapter;
 import com.wang.easychat.common.user.service.cache.ItemCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -171,5 +170,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private User getbyName(String name) {
         return lambdaQuery().eq(User::getName, name).one();
     }
+
 }
 

@@ -13,6 +13,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +32,8 @@ import java.util.Objects;
 public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, UserBackpack> implements IUserBackpackService {
 
     @Autowired
-    private LockService lockService;
+    @Lazy
+    private UserBackpackServiceImpl userBackpackService;
 
     @Override
     public Integer getCountByValidItemId(Long uid, Long itemId) {
@@ -81,7 +84,7 @@ public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, Use
     @Override
     public void acquireItem(Long uid, Long itemId, IdemporentEnum idemporentEnum, String businessId) {
         String idempotent = getIdempotent(itemId, idemporentEnum, businessId);
-        doAcquireItem(uid, itemId, idempotent);
+        userBackpackService.doAcquireItem(uid, itemId, idempotent);
     }
 
     @RedissonLock(key = "#idempotent", waitTime = 5000)

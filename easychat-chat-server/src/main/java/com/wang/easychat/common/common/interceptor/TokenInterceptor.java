@@ -5,7 +5,9 @@ import com.wang.easychat.common.common.domain.vo.resp.ApiResult;
 import com.wang.easychat.common.common.exception.HttpErrorEnum;
 import com.wang.easychat.common.common.utils.JsonUtils;
 import com.wang.easychat.common.user.service.LoginService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
+import org.junit.jupiter.api.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,6 +23,8 @@ import java.util.Optional;
  * @Date: 2024/11/15
  **/
 @Component
+@Slf4j
+@Order(-2)
 public class TokenInterceptor implements HandlerInterceptor {
 
     public static final String HEADER_AUTHORIZATION = "Authorization";

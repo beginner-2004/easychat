@@ -4,8 +4,10 @@ import com.wang.easychat.common.EasychatCustomApplication;
 import com.wang.easychat.common.common.constant.RedisKey;
 import com.wang.easychat.common.common.utils.JwtUtils;
 import com.wang.easychat.common.common.utils.RedisUtils;
+import com.wang.easychat.common.user.domain.entity.Black;
 import com.wang.easychat.common.user.domain.enums.IdemporentEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
+import com.wang.easychat.common.user.service.IBlackService;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
@@ -24,6 +26,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @ClassDescription:
@@ -47,6 +52,13 @@ public class MapeprTest {
     private RedissonClient redissonClient;
     @Autowired
     private LoginService loginService;
+    @Autowired
+    private IBlackService blackService;
+    @Autowired
+    private IUserService userService;
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
 
     @Test
     public void redisLock(){
@@ -62,9 +74,6 @@ public class MapeprTest {
         System.out.println(jwtUtils.createToken(1L));
         System.out.println(jwtUtils.createToken(1L));
     }
-
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Test
     public void thread() throws InterruptedException {
@@ -100,4 +109,12 @@ public class MapeprTest {
     public void delRedis(){
         RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, 20009));
     }
+
+    @Test
+    public void userCache(){
+        Map<Integer, List<Black>> collect = blackService.list().stream().collect(Collectors.groupingBy(Black::getType));
+        Set<Map.Entry<Integer, List<Black>>> entries = collect.entrySet();
+        System.out.println(entries);
+    }
+
 }
