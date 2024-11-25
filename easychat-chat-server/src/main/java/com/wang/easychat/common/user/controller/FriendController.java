@@ -7,14 +7,14 @@ import org.springframework.stereotype.Controller;
 
 /**
  * <p>
- * 用户申请表 前端控制器
+ * 用户联系人表 前端控制器
  * </p>
  *
  * @author wang
  * @since 2024-11-25
  */
 @Controller
-@RequestMapping("/user-apply")
-public class UserApplyController {
+@RequestMapping("/user-friend")
+public class FriendController {
 
 }
