@@ -23,6 +23,12 @@ public class FriendApplyResp {
     @ApiModelProperty("申请人uid")
     private Long uid;
 
+    @ApiModelProperty("申请人昵称")
+    private String name;
+
+    @ApiModelProperty("申请人头像")
+    private String avatar;
+
     /**
      * @see ApplyTypeEnum
      */

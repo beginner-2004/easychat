@@ -155,6 +155,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .list();
     }
 
+    @Override
+    public List<User> getByIds(List<Long> userIds) {
+        return lambdaQuery()
+                .in(User::getId, userIds)
+                .list();
+    }
+
+    @Override
+    public void setUserActiveStatus(Long uid, Integer status) {
+        lambdaUpdate()
+                .eq(User::getId, uid)
+                .set(User::getActiveStatus, status)
+                .update();
+    }
+
     /**
      * 拉黑ip
      * @param ip

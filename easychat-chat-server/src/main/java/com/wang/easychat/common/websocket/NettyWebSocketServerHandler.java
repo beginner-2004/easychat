@@ -3,6 +3,9 @@ package com.wang.easychat.common.websocket;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
+import com.wang.easychat.common.common.utils.RequestHolder;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
+import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.websocket.domain.enums.WSReqTypeEnum;
 import com.wang.easychat.common.websocket.domain.vo.req.WSBaseReq;
 import com.wang.easychat.common.websocket.service.WebSocketService;
@@ -14,13 +17,17 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Sharable
+@Slf4j
 public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
     @Autowired
     private WebSocketService webSocketService;
+    @Autowired
+    private IUserService userService;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -31,6 +38,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         // todo 用户下线
+
          userOffline(ctx.channel());
     }
 
@@ -53,6 +61,8 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
      * 用户下线统一处理
      */
     private void userOffline(Channel channel){
+        // todo 断开连接要把用户在线状态修改成离线
+        // userService.setUserActiveStatus(RequestHolder.get().getUid(), ChatActiveStatusEnum.OFFLINE.getStatus());
         webSocketService.remove(channel);
         channel.close();
 

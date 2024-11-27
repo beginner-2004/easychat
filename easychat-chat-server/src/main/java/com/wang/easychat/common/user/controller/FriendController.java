@@ -8,7 +8,11 @@ import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.domain.vo.resp.PageBaseResp;
 import com.wang.easychat.common.common.utils.RequestHolder;
 import com.wang.easychat.common.user.domain.vo.req.friend.FriendApplyReq;
+import com.wang.easychat.common.user.domain.vo.req.friend.FriendApproveReq;
+import com.wang.easychat.common.user.domain.vo.req.friend.FriendCheckReq;
+import com.wang.easychat.common.user.domain.vo.req.friend.FriendDeleteReq;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendApplyResp;
+import com.wang.easychat.common.user.domain.vo.resp.friend.FriendCheckResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendUnreadResp;
 import com.wang.easychat.common.user.service.IUserFriendService;
@@ -28,13 +32,19 @@ import javax.validation.Valid;
  * @author wang
  * @since 2024-11-25
  */
-@Controller
+@RestController
 @RequestMapping("/capi/user/friend")
 public class FriendController {
 
     @Autowired
     private IUserFriendService userFriendService;
 
+    @GetMapping("/check")
+    @ApiOperation("批量判断是否是自己好友")
+    public ApiResult<FriendCheckResp> check(@Valid FriendCheckReq request) {
+        Long uid = RequestHolder.get().getUid();
+        return ApiResult.success(userFriendService.check(uid, request));
+    }
 
 
     @PostMapping("/apply")
@@ -42,6 +52,13 @@ public class FriendController {
     public ApiResult<Void> apply(@Valid @RequestBody FriendApplyReq request) {
         Long uid = RequestHolder.get().getUid();
         userFriendService.apply(uid, request);
+        return ApiResult.success();
+    }
+
+    @PutMapping("/apply")
+    @ApiOperation("审批同意")
+    public ApiResult<Void> applyApprove(@Valid @RequestBody FriendApproveReq request) {
+        userFriendService.applyApprove(RequestHolder.get().getUid(), request);
         return ApiResult.success();
     }
 
@@ -60,6 +77,15 @@ public class FriendController {
         Long uid = RequestHolder.get().getUid();
         return ApiResult.success(userFriendService.unread(uid));
     }
+
+    @DeleteMapping()
+    @ApiOperation("逻辑删除好友(双向删除)")
+    public ApiResult<Void> delete(@Valid @RequestBody FriendDeleteReq request) {
+        Long uid = RequestHolder.get().getUid();
+        userFriendService.deleteFriend(uid, request.getTargetUid());
+        return ApiResult.success();
+    }
+
 
 
 

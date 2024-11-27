@@ -21,4 +21,10 @@ public interface IRoomFriendService extends IService<RoomFriend> {
      * @return
      */
     RoomFriend createFriendRoom(List<Long> asList);
+
+    /**
+     * 禁用房间
+     * @param asList
+     */
+    void disableFriendRoom(List<Long> asList);
 }

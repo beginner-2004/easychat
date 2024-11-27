@@ -39,7 +39,7 @@ public class RoomFriendServiceImpl extends ServiceImpl<RoomFriendMapper, RoomFri
     @Transactional(rollbackFor = Exception.class)
     public RoomFriend createFriendRoom(List<Long> uidList) {
         AssertUtil.isNotEmpty(uidList, "房间创建失败，好友人数有误");
-        AssertUtil.equal(uidList, 2, "房间创建失败，好友人数有误");
+        AssertUtil.equal(uidList.size(), 2, "房间创建失败，好友人数有误");
         String key = ChatAdapter.generateRoomKey(uidList);
         RoomFriend roomFriend = getByKey(key);
         if (Objects.nonNull(roomFriend)){
@@ -52,6 +52,25 @@ public class RoomFriendServiceImpl extends ServiceImpl<RoomFriendMapper, RoomFri
             roomFriend = createFriendRoom(room.getId(), uidList);
         }
         return null;
+    }
+
+    /**
+     * 禁用房间
+     * @param uidList
+     */
+    @Override
+    public void disableFriendRoom(List<Long> uidList) {
+        AssertUtil.isNotEmpty(uidList, "房间创建失败，好友数量不对");
+        AssertUtil.equal(uidList.size(), 2, "房间创建失败，好友数量不对");
+        String key = ChatAdapter.generateRoomKey(uidList);
+        disableRoom(key);
+    }
+
+    private void disableRoom(String key) {
+        lambdaUpdate()
+                .eq(RoomFriend::getRoomKey, key)
+                .set(RoomFriend::getStatus, NormalOrNoEnum.NOT_NORMAL.getStatus())
+                .update();
     }
 
     private RoomFriend createFriendRoom(Long roomId, List<Long> uidList) {

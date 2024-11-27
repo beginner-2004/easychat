@@ -63,6 +63,7 @@ public class User implements Serializable {
 
     /**
      * 在线状态 1在线 2离线
+     * @see com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum
      */
     @TableField("active_status")
     private Integer activeStatus;

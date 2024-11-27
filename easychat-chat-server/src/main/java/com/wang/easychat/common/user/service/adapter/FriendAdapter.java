@@ -43,6 +43,7 @@ public class FriendAdapter {
     }
 
     public static List<FriendApplyResp> buildFriendApplyList(List<UserApply> records) {
+
         return records.stream().map(userApply -> {
             FriendApplyResp friendApplyResp = new FriendApplyResp();
             friendApplyResp.setUid(userApply.getUid());
@@ -50,6 +51,8 @@ public class FriendAdapter {
             friendApplyResp.setApplyId(userApply.getId());
             friendApplyResp.setMsg(userApply.getMsg());
             friendApplyResp.setStatus(userApply.getStatus());
+            friendApplyResp.setName("");    // todo 查询用户uid缓存
+            friendApplyResp.setAvatar("");
             return friendApplyResp;
         }).collect(Collectors.toList());
     }

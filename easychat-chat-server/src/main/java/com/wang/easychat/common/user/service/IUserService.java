@@ -36,4 +36,8 @@ public interface IUserService extends IService<User> {
     void invalidUid(Long id);
 
     List<User> getFriendList(List<Long> friendUids);
+
+    List<User> getByIds(List<Long> userIds);
+
+    void setUserActiveStatus(Long uid, Integer status);
 }

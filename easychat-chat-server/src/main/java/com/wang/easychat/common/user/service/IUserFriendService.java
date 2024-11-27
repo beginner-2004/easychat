@@ -8,7 +8,9 @@ import com.wang.easychat.common.user.domain.entity.UserFriend;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wang.easychat.common.user.domain.vo.req.friend.FriendApplyReq;
 import com.wang.easychat.common.user.domain.vo.req.friend.FriendApproveReq;
+import com.wang.easychat.common.user.domain.vo.req.friend.FriendCheckReq;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendApplyResp;
+import com.wang.easychat.common.user.domain.vo.resp.friend.FriendCheckResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendUnreadResp;
 
@@ -46,6 +48,25 @@ public interface IUserFriendService extends IService<UserFriend> {
      */
     void apply(Long uid, FriendApplyReq request);
 
+    /**
+     * 同意好友申请
+     * @param uid
+     * @param friendApproveReq
+     */
     void applyApprove(Long uid, FriendApproveReq friendApproveReq);
 
+    /**
+     * 删除好友
+     * @param uid
+     * @param friendUid
+     */
+    void deleteFriend(Long uid, Long friendUid);
+
+    /**
+     * 批量查询是否是 uid用户的联系人
+     * @param uid
+     * @param request
+     * @return
+     */
+    FriendCheckResp check(Long uid, FriendCheckReq request);
 }

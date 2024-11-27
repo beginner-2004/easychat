@@ -18,7 +18,9 @@ import com.wang.easychat.common.user.domain.entity.UserFriend;
 import com.wang.easychat.common.user.domain.enums.ApplyStatusEnum;
 import com.wang.easychat.common.user.domain.vo.req.friend.FriendApplyReq;
 import com.wang.easychat.common.user.domain.vo.req.friend.FriendApproveReq;
+import com.wang.easychat.common.user.domain.vo.req.friend.FriendCheckReq;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendApplyResp;
+import com.wang.easychat.common.user.domain.vo.resp.friend.FriendCheckResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendUnreadResp;
 import com.wang.easychat.common.user.mapper.UserFriendMapper;
@@ -37,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +60,7 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
     private IUserApplyService userApplyService;
     @Autowired
     private IRoomFriendService roomFriendService;
+
 
     /**
      * 分页查询uid用户的联系人列表
@@ -86,6 +90,7 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
             return PageBaseResp.empty();
         }
         readApples(uid, userApplyIPage);
+
         return PageBaseResp.init(userApplyIPage, FriendAdapter.buildFriendApplyList(userApplyIPage.getRecords()));
     }
 
@@ -127,6 +132,7 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
         }
         // 入库
         UserApply insert = FriendAdapter.buildFriendApply(uid, request);
+        userApplyService.save(insert);
         // todo 创建一个事件，用于推送消息给前端，刷新未读好友申请个数
     }
 
@@ -145,6 +151,69 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
         //创建一个聊天房间
         RoomFriend roomFriend = roomFriendService.createFriendRoom(Arrays.asList(uid, userApply.getUid()));
         // todo 发送一条同意消息。。我们已经是好友了，开始聊天吧
+    }
+
+    /**
+     * 删除好友
+     * @param uid
+     * @param friendUid
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteFriend(Long uid, Long friendUid) {
+        List<UserFriend> userFriends = getUserFriend(uid, friendUid);
+        if (CollectionUtil.isEmpty(userFriends)){
+            log.info("没有好友关系:{},{}", uid, friendUid);
+            return;
+        }
+        List<Long> friendRecordIds = userFriends.stream().map(UserFriend::getId).collect(Collectors.toList());
+        // 逻辑删除记录
+        removeByIds(friendRecordIds);
+        // 禁用房间
+        roomFriendService.disableFriendRoom(Arrays.asList(uid, friendUid));
+    }
+
+    /**
+     * 批量查询是否是 uid用户的联系人
+     *
+     * @param uid
+     * @param request
+     * @return
+     */
+    @Override
+    public FriendCheckResp check(Long uid, FriendCheckReq request) {
+        List<UserFriend> friendList = getByFriends(uid, request.getUidList());
+        Set<Long> friendUidSet = friendList.stream().map(UserFriend::getFriendUid).collect(Collectors.toSet());
+
+        List<FriendCheckResp.FriendCheck> friendCheckList = request.getUidList().stream().map(friendUid -> {
+            FriendCheckResp.FriendCheck friendCheck = new FriendCheckResp.FriendCheck();
+            friendCheck.setUid(friendUid);
+            friendCheck.setIsFriend(friendUidSet.contains(friendUid));
+            return friendCheck;
+        }).collect(Collectors.toList());
+
+        return new FriendCheckResp(friendCheckList);
+    }
+
+    /**
+     * 根据 id集合查找朋友关系
+     */
+    private List<UserFriend> getByFriends(Long uid, List<Long> uidList) {
+        return lambdaQuery()
+                .eq(UserFriend::getUid, uid)
+                .in(UserFriend::getFriendUid, uidList)
+                .list();
+    }
+
+    private List<UserFriend> getUserFriend(Long uid, Long friendUid) {
+        return lambdaQuery()
+                .eq(UserFriend::getUid, uid)
+                .eq(UserFriend::getFriendUid, friendUid)
+                .or()
+                .eq(UserFriend::getFriendUid, uid)
+                .eq(UserFriend::getUid, friendUid)
+                .select(UserFriend::getId)
+                .list();
     }
 
     /**

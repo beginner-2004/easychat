@@ -9,6 +9,7 @@ import com.wang.easychat.common.common.event.UserOnLineEvent;
 import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.entity.IpInfo;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.IUserRoleService;
@@ -154,6 +155,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, user.getId()));
 
         // todo 用户上线成功的事件
+        user.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
         user.setLastOptTime(new Date());
         user.refreshIp(NettyUtil.getAttr(channel, NettyUtil.IP));
         applicationEventPublisher.publishEvent(new UserOnLineEvent(this, user));
