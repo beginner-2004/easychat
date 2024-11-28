@@ -74,6 +74,15 @@ public class UserBackpackServiceImpl extends ServiceImpl<UserBackpackMapper, Use
                 .list();
     }
 
+    @Override
+    public List<UserBackpack> getByItemIds(List<Long> uids, List<Long> itemIds) {
+        return lambdaQuery()
+                .in(UserBackpack::getUid, uids)
+                .in(UserBackpack::getItemId, itemIds)
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus())
+                .list();
+    }
+
     /**
      * 给用户发放一个物品
      * @param uid            用户id

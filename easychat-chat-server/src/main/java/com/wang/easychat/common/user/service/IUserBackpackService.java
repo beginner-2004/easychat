@@ -24,6 +24,8 @@ public interface IUserBackpackService extends IService<UserBackpack> {
 
     List<UserBackpack> getByItemIds(Long uid, List<Long> itemIds);
 
+    List<UserBackpack> getByItemIds(List<Long> uids, List<Long> itemIds);
+
     /**
      * 给用户发放一个物品
      * @param uid   用户id

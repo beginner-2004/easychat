@@ -1,21 +1,25 @@
 package com.wang.easychat.common.user.service.cache;
 
+import cn.hutool.core.collection.CollUtil;
+import com.wang.easychat.common.common.constant.RedisKey;
+import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.entity.Black;
 import com.wang.easychat.common.user.domain.entity.ItemConfig;
+import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.entity.UserRole;
 import com.wang.easychat.common.user.service.IBlackService;
 import com.wang.easychat.common.user.service.IItemConfigService;
 import com.wang.easychat.common.user.service.IUserRoleService;
+import com.wang.easychat.common.user.service.IUserService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +33,9 @@ public class UserCache {
     private IUserRoleService userRoleService;
     @Autowired
     private IBlackService blackService;
+    @Autowired
+    @Lazy
+    private IUserService userService;
 
     @Cacheable(cacheNames = "user", key = "'blackList'")
     public Map<Integer, Set<String>> getBlackMap() {
@@ -54,5 +61,31 @@ public class UserCache {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * 获取用户信息，盘路缓存模式
+     */
+    public Map<Long, User> getUserInfoBatch(Set<Long> uids){
+        // 批量组装key
+        List<String> keys = uids.stream().map(uid -> RedisKey.getKey(RedisKey.USER_INTO_STRING, uid)).collect(Collectors.toList());
+        // 批量get
+        List<User> mget = RedisUtils.mget(keys, User.class);
+        Map<Long, User> map = mget.stream().filter(Objects::nonNull).collect(Collectors.toMap(User::getId, Function.identity()));
+        // 计算差集（需要更新的id）
+        List<Long> needLoadUidList = uids.stream().filter(uid -> !map.containsKey(uid)).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(needLoadUidList)){
+            // 批量load
+            List<User> needLoadUserList = userService.listByIds(needLoadUidList);
+            Map<String, User> redisMap = needLoadUserList.stream().collect(Collectors.toMap(user -> RedisKey.getKey(RedisKey.USER_INTO_STRING, user.getId()), Function.identity()));
+            RedisUtils.mset(redisMap, 5 * 60);
+            // 加载回redis
+            map.putAll(needLoadUserList.stream().collect(Collectors.toMap(User::getId, Function.identity())));
+        }
+        return map;
+    }
 
+    public List<Long> getUserModifyTime(List<Long> uidList) {
+        List<String> keys = uidList.stream().map(uid -> RedisKey.getKey(RedisKey.USER_MODIFY_STRING, uid)).collect(Collectors.toList());
+        return RedisUtils.mget(keys, Long.class);
+
+    }
 }

@@ -4,10 +4,10 @@ package com.wang.easychat.common.user.controller;
 import com.wang.easychat.common.common.domain.vo.resp.ApiResult;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.common.utils.RequestHolder;
+import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
+import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
-import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
-import com.wang.easychat.common.user.domain.vo.req.user.ModifyNameReq;
-import com.wang.easychat.common.user.domain.vo.req.user.WearingBadgeReq;
+import com.wang.easychat.common.user.domain.vo.req.user.*;
 import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import com.wang.easychat.common.user.service.IRoleService;
@@ -75,6 +75,16 @@ public class UserController {
         return ApiResult.success();
     }
 
+    @PostMapping("/public/summary/userInfo/batch")
+    @ApiOperation("用户聚合信息-返回的代表需要刷新的")
+    public ApiResult<List<SummeryInfoDTO>> getSummeryUserInfo(@Valid @RequestBody SummeryInfoReq req) {
+        return ApiResult.success(userService.getSummeryUserInfo(req));
+    }
 
+    @PostMapping("/public/badges/batch")
+    @ApiOperation("徽章聚合信息-返回的代表需要刷新的")
+    public ApiResult<List<ItemInfoDTO>> getItemInfo(@Valid @RequestBody ItemInfoReq req) {
+        return ApiResult.success(userService.getItemInfo(req));
+    }
 
 }

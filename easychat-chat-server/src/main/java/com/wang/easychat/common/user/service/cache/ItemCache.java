@@ -32,4 +32,8 @@ public class ItemCache {
         return;
     }
 
+    @Cacheable(cacheNames = "item", key = "'item:'+#itemId")
+    public ItemConfig getById(Long itemId) {
+        return itemConfigService.getById(itemId);
+    }
 }

@@ -1,8 +1,12 @@
 package com.wang.easychat.common.user.service;
 
+import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
+import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
+import com.wang.easychat.common.user.domain.vo.req.user.ItemInfoReq;
+import com.wang.easychat.common.user.domain.vo.req.user.SummeryInfoReq;
 import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import org.springframework.stereotype.Service;
@@ -40,4 +44,11 @@ public interface IUserService extends IService<User> {
     List<User> getByIds(List<Long> userIds);
 
     void setUserActiveStatus(Long uid, Integer status);
+
+    /**
+     * 获取用户汇总信息
+     */
+    List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req);
+
+    List<ItemInfoDTO> getItemInfo(ItemInfoReq req);
 }

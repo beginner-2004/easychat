@@ -5,11 +5,15 @@ import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.event.UserBlackEvent;
 import com.wang.easychat.common.common.event.UserRegisterEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
+import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.entity.*;
 import com.wang.easychat.common.user.domain.enums.BlackTypeEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.enums.ItemTypeEnum;
 import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
+import com.wang.easychat.common.user.domain.vo.req.user.ItemInfoReq;
+import com.wang.easychat.common.user.domain.vo.req.user.SummeryInfoReq;
 import com.wang.easychat.common.user.domain.vo.resp.user.BadgeResp;
 import com.wang.easychat.common.user.domain.vo.resp.user.UserInfoResp;
 import com.wang.easychat.common.user.mapper.UserMapper;
@@ -20,6 +24,8 @@ import com.wang.easychat.common.user.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wang.easychat.common.user.service.adapter.UserAdapter;
 import com.wang.easychat.common.user.service.cache.ItemCache;
+import com.wang.easychat.common.user.service.cache.UserCache;
+import com.wang.easychat.common.user.service.cache.UserSummaryCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +58,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
     private IBlackService blackService;
+    @Autowired
+    private UserCache userCache;
+    @Autowired
+    private UserSummaryCache userSummaryCache;
 
     public User getByOpenId(String openId) {
         return lambdaQuery()
@@ -168,6 +177,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .eq(User::getId, uid)
                 .set(User::getActiveStatus, status)
                 .update();
+    }
+
+    /**
+     * 获取用户汇总信息
+     */
+    @Override
+    public List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req) {
+        // 获取前端需要同步的uid
+        List<Long> uidList = getNeedSyncUidList(req.getReqList());
+        // 加载用户信息
+        Map<Long, SummeryInfoDTO> batch = userSummaryCache.getBatch(uidList);
+        return req.getReqList().stream()
+                .map(a -> batch.containsKey(a.getUid()) ? batch.get(a.getUid()) : SummeryInfoDTO.skip(a.getUid()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ItemInfoDTO> getItemInfo(ItemInfoReq req) { // item相关数据较少，简单做
+        return req.getReqList().stream().map(a -> {
+            ItemConfig itemConfig = itemCache.getById(a.getItemId());
+            if (Objects.nonNull(a.getLastModifyTime()) && a.getLastModifyTime() >= itemConfig.getUpdateTime().getTime()) {
+                return ItemInfoDTO.skip(a.getItemId());
+            }
+            ItemInfoDTO dto = new ItemInfoDTO();
+            dto.setItemId(itemConfig.getId());
+            dto.setImg(itemConfig.getImg());
+            dto.setDescribe(itemConfig.getDescribe());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    private List<Long> getNeedSyncUidList(List<SummeryInfoReq.infoReq> reqList) {
+        List<Long> needSyncUidList = new ArrayList<>();
+        List<Long> userModifyTime = userCache.getUserModifyTime(reqList.stream().map(SummeryInfoReq.infoReq::getUid).collect(Collectors.toList()));
+        for (int i = 0; i < reqList.size(); i++) {
+            SummeryInfoReq.infoReq infoReq = reqList.get(i);
+            Long modifyTime = userModifyTime.get(i);
+            // 筛选需要刷新信息的用户
+            if (Objects.isNull(infoReq.getLastModifyTime()) || (Objects.nonNull(modifyTime) && modifyTime > infoReq.getLastModifyTime())){
+                needSyncUidList.add(infoReq.getUid());
+            }
+        }
+        return needSyncUidList;
     }
 
     /**
