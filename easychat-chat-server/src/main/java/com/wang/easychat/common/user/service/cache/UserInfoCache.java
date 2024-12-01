@@ -37,6 +37,4 @@ public class UserInfoCache extends AbstractRedisStringCache<Long, User> {
         List<User> needLoadUserList = userService.listByIds(uidList);
         return needLoadUserList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
     }
-
-
 }

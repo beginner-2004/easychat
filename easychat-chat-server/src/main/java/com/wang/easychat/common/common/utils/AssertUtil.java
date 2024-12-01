@@ -7,6 +7,7 @@ import com.wang.easychat.common.common.exception.ErrorEnum;
 import org.hibernate.validator.HibernateValidator;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.text.MessageFormat;
@@ -63,7 +64,6 @@ public class AssertUtil {
             throwException(CommonErrorEnum.PARAM_INVALID, errorMsg.toString().substring(0, errorMsg.length() - 1));
         }
     }
-
 
     /**
      * 注解验证参数(全部校验,返回异常信息集合)

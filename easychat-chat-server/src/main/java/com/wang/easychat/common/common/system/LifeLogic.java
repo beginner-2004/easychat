@@ -22,6 +22,6 @@ public class LifeLogic implements DisposableBean {
     // 项目终止前执行逻辑
     @Override
     public void destroy() throws Exception {
-        log.info("spirngboot项目即将关闭...");
+        log.info("easychat即将关闭...");
     }
 }

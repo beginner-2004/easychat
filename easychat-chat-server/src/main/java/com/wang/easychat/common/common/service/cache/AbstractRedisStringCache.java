@@ -2,7 +2,6 @@ package com.wang.easychat.common.common.service.cache;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.wang.easychat.common.common.utils.RedisUtils;
-import io.swagger.models.auth.In;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +40,7 @@ public abstract class AbstractRedisStringCache<IN, OUT> implements BatchCache<IN
      */
     @Override
     public OUT get(IN req) {
-        return null;
+        return getBatch(Collections.singletonList(req)).get(req);
     }
 
     /**
@@ -97,7 +96,7 @@ public abstract class AbstractRedisStringCache<IN, OUT> implements BatchCache<IN
      */
     @Override
     public void delete(IN req) {
-
+        deleteBatch(Collections.singletonList(req));
     }
 
     /**
@@ -107,6 +106,7 @@ public abstract class AbstractRedisStringCache<IN, OUT> implements BatchCache<IN
      */
     @Override
     public void deleteBatch(List<IN> req) {
-
+        List<String> keys = req.stream().map(this::getKey).collect(Collectors.toList());
+        RedisUtils.del(keys);
     }
 }
