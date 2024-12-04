@@ -68,7 +68,7 @@ rocketmq:
   # 默认的消息组
   producer:
     group: chatGroup
-    send-message-timeout: 3000 # 发送消息超时时间，单位：毫秒。默认为 3000 。
+    send-message-timeout: 5000 # 发送消息超时时间，单位：毫秒。默认为 3000 。
     compress-message-body-threshold: 4096 # 消息压缩阀值，当消息体的大小超过该阀值后，进行消息压缩。默认为 4 * 1024B
     max-message-size: 4194304 # 消息体的最大允许大小。。默认为 4 * 1024 * 1024B
     retry-times-when-send-failed: 2 # 同步发送消息时，失败重试次数。默认为 2 次。

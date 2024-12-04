@@ -1,6 +1,7 @@
 package com.wang.easychat.common.common.config;
 
 import com.wang.easychat.common.common.thread.MyThreadFactory;
+import com.wang.easychat.transaction.annotation.SecureInvokeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -18,7 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  **/
 @Configuration
 @EnableAsync
-public class ThreadPoolConfig implements AsyncConfigurer {
+public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer {
     /**
      * 项目共用线程池
      */
@@ -33,6 +34,13 @@ public class ThreadPoolConfig implements AsyncConfigurer {
         return easychatExecutor();
     }
 
+    /**
+     * 返回一个线程池
+     */
+    @Override
+    public Executor getSecureInvokeExecutor() {
+        return easychatExecutor();
+    }
 
     @Bean(EASYCHAT_EXECUTOR)
     @Primary

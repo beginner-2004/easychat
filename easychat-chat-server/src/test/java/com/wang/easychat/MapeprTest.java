@@ -66,7 +66,7 @@ public class MapeprTest {
     @Test
     public void sendMQ(){
         Message<String> build = MessageBuilder.withPayload("123").build();
-        rocketMQTemplate.send("test-topic", build);
+        rocketMQTemplate.send("test1-topic", build);
     }
 
 
