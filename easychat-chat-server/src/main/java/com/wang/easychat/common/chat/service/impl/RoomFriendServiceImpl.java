@@ -66,6 +66,18 @@ public class RoomFriendServiceImpl extends ServiceImpl<RoomFriendMapper, RoomFri
         disableRoom(key);
     }
 
+    /**
+     * 根据roomId查询房间信息
+     *
+     * @param roomId
+     */
+    @Override
+    public RoomFriend getByRoomId(Long roomId) {
+        return lambdaQuery()
+                .eq(RoomFriend::getRoomId, roomId)
+                .one();
+    }
+
     private void disableRoom(String key) {
         lambdaUpdate()
                 .eq(RoomFriend::getRoomKey, key)

@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -37,7 +38,7 @@ public class SecureinvokeService {
     /**
      * 处理需要重试的方法(5分钟执行一次)
      */
-    // todo @Scheduled(cron = "*/5 * * * * ?")
+    @Scheduled(cron = "*/5 * * * * ?")
     public void retry() {
         List<SecureInvokeRecord> secureInvokeRecords = secureInvokeRecordService.getWaitRetryRecords();
         for (SecureInvokeRecord secureInvokeRecord : secureInvokeRecords) {
@@ -92,7 +93,7 @@ public class SecureinvokeService {
 
     private void doAsyncInvoke(SecureInvokeRecord record) {
         executor.execute(() -> {
-            System.out.println(Thread.currentThread().getName());
+            log.info("{}:执行消息记录 => {}", Thread.currentThread().getName(), record);
             doInvoke(record);
         });
     }

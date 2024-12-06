@@ -11,14 +11,20 @@ import com.wang.easychat.common.chat.service.IMessageService;
 import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
 import com.wang.easychat.common.chat.service.cache.MsgCache;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
+import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.RoleEnum;
+import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.user.service.cache.UserInfoCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @ClassDescription: 普通文本消息
@@ -34,6 +40,8 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     private MsgCache msgCache;
     @Autowired
     private UserInfoCache userInfoCache;
+    @Autowired
+    private IRoleService roleService;
 
     /**
      * 消息类型
@@ -41,6 +49,31 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     @Override
     MessageTypeEnum getMsgTypeEnum() {
         return MessageTypeEnum.TEXT;
+    }
+
+    /**
+     *
+     */
+    @Override
+    protected void checkMsg(TextMsgReq body, Long roomId, Long uid) {
+        // 检验回复消息
+        if (Objects.nonNull(body.getReplyMsgId())){
+            Message replyMsg = messageService.getById(body.getReplyMsgId());
+            AssertUtil.isNotEmpty(replyMsg, "回复消息不存在");
+            AssertUtil.equal(replyMsg.getRoomId(), roomId, "只能回复相同会话下消息");
+        }
+        if (CollectionUtil.isNotEmpty(body.getAtUidList())) {
+            // 前端传入的@列表去重
+            List<Long> atUidList = body.getAtUidList().stream().distinct().collect(Collectors.toList());
+            Map<Long, User> userBatch = userInfoCache.getBatch(atUidList);
+            // 如果@用户不存在则过滤
+            long batchCount = atUidList.stream().filter(Objects::nonNull).count();
+            AssertUtil.equal((long) atUidList.size(), batchCount, "@用户不存在");
+            boolean atAll = body.getAtUidList().contains(0L);
+            if (atAll) {
+                AssertUtil.isTrue(roleService.hasPower(uid, RoleEnum.CHAT_MANAGER), "没有权限");
+            }
+        }
     }
 
     /**
@@ -60,6 +93,7 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
         update.setExtra(extra);
         // 如果有回复信息
         if (Objects.nonNull(body.getReplyMsgId())) {
+            // todo 将gapCount收录到extra中
             Integer gapCount = messageService.getGapCount(msg.getRoomId(), body.getReplyMsgId(), msg.getId());
             update.setGapCount(gapCount);
             update.setReplyMsgId(body.getReplyMsgId());

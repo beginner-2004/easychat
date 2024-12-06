@@ -26,7 +26,7 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("message")
+@TableName(value = "message", autoResultMap = true)
 @ApiModel(value="Message对象", description="消息表")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,6 +52,9 @@ public class Message implements Serializable {
     private Long replyMsgId;
 
     @ApiModelProperty(value = "消息状态 0正常 1删除")
+    /**
+     * @see com.wang.easychat.common.chat.domain.enums.MessageStatusEnum
+     */
     private Integer status;
 
     @ApiModelProperty(value = "与回复的消息间隔多少条")

@@ -37,7 +37,8 @@ public class CursorUtils {
         }
         // 游标方向
         wrapper.orderByDesc(cursorColumn);
-
+        wrapper.last("LIMIT 10");
+        // todo 分页限制失效
         Page<T> page = service.page(request.plusPage(), wrapper);
         // 取出游标
         String cursor = Optional.ofNullable(CollectionUtil.getLast(page.getRecords()))

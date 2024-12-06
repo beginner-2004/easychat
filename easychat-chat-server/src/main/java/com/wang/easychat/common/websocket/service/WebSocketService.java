@@ -20,4 +20,10 @@ public interface WebSocketService {
     void authorize(Channel channel, String token);
 
     void sendMsgToAll(WSBaseResp<?> msg);
+
+    void sendToUid(WSBaseResp<?> wsBaseMsg, Long uid);
+
+    void sendToAllOnline(WSBaseResp<?> wsBaseMsg, Long skipUid);
+
+    Long getOnLineUserMap(Channel channel);
 }

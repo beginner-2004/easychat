@@ -101,8 +101,7 @@ public class WXMsgServiceImpl implements WXMsgService {
     private Integer getEventKey(WxMpXmlMessage wxMpXmlMessage) {
         try {
             String eventKey = wxMpXmlMessage.getEventKey();
-            String code = eventKey.replace("qrscene_", "");
-            return Integer.parseInt(code);
+            return Integer.parseInt(eventKey);
         } catch (Exception e) {
             log.error("getEventKey error eventKey:{}", wxMpXmlMessage.getEventKey(), e);
             return null;

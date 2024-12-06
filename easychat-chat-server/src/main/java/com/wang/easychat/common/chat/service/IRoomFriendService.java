@@ -27,4 +27,9 @@ public interface IRoomFriendService extends IService<RoomFriend> {
      * @param asList
      */
     void disableFriendRoom(List<Long> asList);
+
+    /**
+     * 根据roomId查询房间信息
+     */
+    RoomFriend getByRoomId(Long roomId);
 }

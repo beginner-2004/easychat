@@ -2,6 +2,8 @@ package com.wang.easychat.common.chat.service;
 
 import com.wang.easychat.common.chat.domain.entity.Message;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wang.easychat.common.chat.domain.vo.req.ChatMessagePageReq;
+import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 
 /**
  * <p>
@@ -21,4 +23,13 @@ public interface IMessageService extends IService<Message> {
      * @return
      */
     Integer getGapCount(Long roomId, Long replyMsgId, Long id);
+
+    /**
+     * 获取游标翻页的消息体
+     * @param roomId
+     * @param request
+     * @param lastMsgId
+     * @return
+     */
+    CursorPageBaseResp<Message> getCursorPage(Long roomId, ChatMessagePageReq request, Long lastMsgId);
 }

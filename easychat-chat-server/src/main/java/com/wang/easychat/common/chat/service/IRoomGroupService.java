@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IRoomGroupService extends IService<RoomGroup> {
 
+    RoomGroup getByRoomId(Long roomId);
 }

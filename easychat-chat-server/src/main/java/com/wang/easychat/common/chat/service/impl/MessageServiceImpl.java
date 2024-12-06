@@ -1,10 +1,16 @@
 package com.wang.easychat.common.chat.service.impl;
 
 import com.wang.easychat.common.chat.domain.entity.Message;
+import com.wang.easychat.common.chat.domain.enums.MessageStatusEnum;
+import com.wang.easychat.common.chat.domain.vo.req.ChatMessagePageReq;
 import com.wang.easychat.common.chat.mapper.MessageMapper;
 import com.wang.easychat.common.chat.service.IMessageService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
+import com.wang.easychat.common.common.utils.CursorUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 /**
  * <p>
@@ -32,5 +38,21 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 .gt(Message::getId, fromId)
                 .le(Message::getId, toId)
                 .count();
+    }
+
+    /**
+     * 获取游标翻页的消息体
+     * @param roomId
+     * @param request
+     * @param lastMsgId
+     * @return
+     */
+    @Override
+    public CursorPageBaseResp<Message> getCursorPage(Long roomId, ChatMessagePageReq request, Long lastMsgId) {
+        return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
+            wrapper.eq(Message::getRoomId, roomId);
+            wrapper.eq(Message::getStatus, MessageStatusEnum.NORMAL.getStatus());
+            wrapper.le(Objects.nonNull(lastMsgId), Message::getId, lastMsgId);
+        }, Message::getId);
     }
 }

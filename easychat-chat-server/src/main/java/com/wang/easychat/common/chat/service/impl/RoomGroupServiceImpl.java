@@ -17,4 +17,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoomGroupServiceImpl extends ServiceImpl<RoomGroupMapper, RoomGroup> implements IRoomGroupService {
 
+    @Override
+    public RoomGroup getByRoomId(Long roomId) {
+        return lambdaQuery()
+                .eq(RoomGroup::getRoomId, roomId)
+                .one();
+    }
 }

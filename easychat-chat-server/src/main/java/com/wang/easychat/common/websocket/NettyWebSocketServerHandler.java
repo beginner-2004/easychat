@@ -3,7 +3,8 @@ package com.wang.easychat.common.websocket;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
-import com.wang.easychat.common.common.utils.RequestHolder;
+import com.wang.easychat.common.common.constant.RedisKey;
+import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.websocket.domain.enums.WSReqTypeEnum;
@@ -19,6 +20,7 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Sharable
 @Slf4j
@@ -31,15 +33,29 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        userService = SpringUtil.getBean(IUserService.class);
         webSocketService = SpringUtil.getBean(WebSocketService.class);
         webSocketService.connect(ctx.channel());
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        // todo 用户下线
-
          userOffline(ctx.channel());
+    }
+
+    /**
+     * 用户下线统一处理
+     */
+    private void userOffline(Channel channel){
+        Long uid = webSocketService.getOnLineUserMap(channel);
+        try{
+            userService.setUserActiveStatus(uid, ChatActiveStatusEnum.OFFLINE.getStatus());
+        }catch (Exception e){
+            log.info("Error => {}", e);
+        }
+        webSocketService.remove(channel);
+        RedisUtils.del(RedisKey.getKey(RedisKey.USER_TOKEN_STRING, uid));
+        channel.close();
     }
 
     @Override
@@ -55,17 +71,6 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
                 // userOffline(ctx.channel());
             }
         }
-    }
-
-    /**
-     * 用户下线统一处理
-     */
-    private void userOffline(Channel channel){
-        // todo 断开连接要把用户在线状态修改成离线
-        // userService.setUserActiveStatus(RequestHolder.get().getUid(), ChatActiveStatusEnum.OFFLINE.getStatus());
-        webSocketService.remove(channel);
-        channel.close();
-
     }
 
     @Override

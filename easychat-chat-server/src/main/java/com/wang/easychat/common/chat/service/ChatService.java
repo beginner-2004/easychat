@@ -1,8 +1,11 @@
 package com.wang.easychat.common.chat.service;
 
 import com.wang.easychat.common.chat.domain.entity.Message;
+import com.wang.easychat.common.chat.domain.vo.req.ChatMessageBaseReq;
+import com.wang.easychat.common.chat.domain.vo.req.ChatMessagePageReq;
 import com.wang.easychat.common.chat.domain.vo.req.ChatMessageReq;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
+import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 
 /**
     @ClassDescription:
@@ -20,6 +23,17 @@ public interface ChatService {
     /**
      * 整合消息展示体给前端
      */
-    ChatMessageResp getMsgResp(Long msgId, Long uid);
+    ChatMessageResp getMsgResp(Long msgId, Long receiveUid);
 
+    ChatMessageResp getMsgResp(Message message, Long receiveUid);
+
+    /**
+     * 获取会话消息
+     */
+    CursorPageBaseResp<ChatMessageResp> getMsgPage(ChatMessagePageReq request, Long receiveUid);
+
+    /**
+     * 撤回消息
+     */
+    void recallMsg(Long uid, ChatMessageBaseReq request);
 }
