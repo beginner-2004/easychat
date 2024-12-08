@@ -27,16 +27,16 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
      * 查看当前消息和回复的消息直接的距离
      *
      * @param roomId
-     * @param fromId
-     * @param toId
+     * @param replyMsgId
+     * @param msgId
      * @return
      */
     @Override
-    public Integer getGapCount(Long roomId, Long fromId, Long toId) {
+    public Integer getGapCount(Long roomId, Long replyMsgId, Long msgId) {
         return lambdaQuery()
-                .eq(Message::getFromUid, roomId)
-                .gt(Message::getId, fromId)
-                .le(Message::getId, toId)
+                .eq(Message::getRoomId, roomId)
+                .gt(Message::getId, replyMsgId)
+                .le(Message::getId, msgId)
                 .count();
     }
 

@@ -127,4 +127,9 @@ public class MapeprTest {
         System.out.println(entries);
     }
 
+    @Test
+    public void getUploadUrl() {
+
+    }
+
 }

@@ -4,7 +4,7 @@
 #    com.github.binarywang.demo.wx.mp: DEBUG
 #    me.chanjar.weixin: DEBUG
 #mybatis-plus:
-#  mapper-locations: classpath:mapper/**/*.xml
+#  com.wang.easychat.transaction.mapper-locations: classpath:com.wang.easychat.transaction.mapper/**/*.xml
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 #    map-underscore-to-camel-case: true

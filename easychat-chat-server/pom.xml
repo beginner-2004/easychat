@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>easychat</artifactId>
-        <groupId>com.wang</groupId>
+        <groupId>com.wang.easychat</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -19,10 +19,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.wang</groupId>
+            <groupId>com.wang.easychat</groupId>
             <artifactId>easychat-common-starter</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.wang.easychat</groupId>
+            <artifactId>easychat-transaction</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
@@ -42,6 +46,10 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
         </dependency>
     </dependencies>
 
