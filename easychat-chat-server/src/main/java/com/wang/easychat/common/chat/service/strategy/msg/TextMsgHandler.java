@@ -12,6 +12,8 @@ import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
 import com.wang.easychat.common.chat.service.cache.MsgCache;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.common.utils.discover.PrioritizedUrlDiscover;
+import com.wang.easychat.common.common.utils.discover.domain.UrlInfo;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
@@ -42,6 +44,8 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     private UserInfoCache userInfoCache;
     @Autowired
     private IRoleService roleService;
+
+    private static final PrioritizedUrlDiscover URL_TITLE_DISCOVER = new PrioritizedUrlDiscover();
 
     /**
      * 消息类型
@@ -102,7 +106,9 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
         if (CollectionUtil.isNotEmpty(body.getAtUidList())) {
             extra.setAtUidList(body.getAtUidList());
         }
-        // todo 解析并设置文本内容中的网址需要跳转的位置
+        // 解析并设置文本内容中的网址需要跳转的位置
+        Map<String, UrlInfo> urlContentMap = URL_TITLE_DISCOVER.getUrlContentMap(body.getContent());
+        extra.setUrlContentMap(urlContentMap);
         messageService.updateById(update);
     }
 
