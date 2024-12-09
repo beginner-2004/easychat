@@ -11,6 +11,8 @@ import com.wang.easychat.common.user.service.IBlackService;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
+import com.wang.easychat.oss.domain.OssReq;
+import com.wang.easychat.oss.service.MinIOTemplate;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -62,6 +64,8 @@ public class MapeprTest {
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
+    @Autowired
+    private MinIOTemplate minIOTemplate;
 
     @Test
     public void sendMQ(){
@@ -129,6 +133,11 @@ public class MapeprTest {
 
     @Test
     public void getUploadUrl() {
+        OssReq ossReq = OssReq.builder()
+                .fileName("test.png")
+                .filePath("/test")
+                .autoPath(false)
+                .build();
 
     }
 

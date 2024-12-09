@@ -16,6 +16,7 @@ import com.wang.easychat.common.user.domain.vo.resp.friend.FriendCheckResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendResp;
 import com.wang.easychat.common.user.domain.vo.resp.friend.FriendUnreadResp;
 import com.wang.easychat.common.user.service.IUserFriendService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/capi/user/friend")
+@Api(tags = "用户好友相关接口")
 public class FriendController {
 
     @Autowired

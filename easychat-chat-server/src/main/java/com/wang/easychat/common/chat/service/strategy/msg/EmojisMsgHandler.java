@@ -6,6 +6,7 @@ import com.wang.easychat.common.chat.domain.entity.msg.MessageExtra;
 import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
 import com.wang.easychat.common.chat.service.IMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
  * @Author:Wangzd
  * @Date: 2024/12/1
  **/
+@Component
 public class EmojisMsgHandler extends AbstractMsgHandler<EmojisMsgDTO>{
     @Autowired
     private IMessageService messageService;

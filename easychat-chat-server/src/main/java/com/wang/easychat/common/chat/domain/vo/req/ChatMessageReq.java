@@ -22,6 +22,9 @@ public class ChatMessageReq {
     @ApiModelProperty("房间id")
     private Long roomId;
 
+    /**
+     * @see com.wang.easychat.common.chat.domain.enums.MessageTypeEnum
+     */
     @ApiModelProperty("消息类型")
     @NotNull
     private Integer msgType;

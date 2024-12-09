@@ -21,5 +21,9 @@
             <groupId>com.wang.easychat</groupId>
             <artifactId>easychat-common-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
     </dependencies>
 </project>
