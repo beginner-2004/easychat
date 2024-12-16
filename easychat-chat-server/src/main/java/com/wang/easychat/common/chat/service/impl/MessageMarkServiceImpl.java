@@ -32,4 +32,37 @@ public class MessageMarkServiceImpl extends ServiceImpl<MessageMarkMapper, Messa
                 .eq(MessageMark::getStatus, NormalOrNoEnum.NORMAL.getStatus())
                 .list();
     }
+
+    /**
+     * 获取标记数据
+     *
+     * @param uid
+     * @param msgId
+     * @param markType
+     * @return
+     */
+    @Override
+    public MessageMark get(Long uid, Long msgId, Integer markType) {
+        return lambdaQuery()
+                .eq(MessageMark::getUid, uid)
+                .eq(MessageMark::getMsgId, msgId)
+                .eq(MessageMark::getType, markType)
+                .one();
+    }
+
+    /**
+     * 获取标记次数
+     *
+     * @param msgId
+     * @param markType
+     * @return
+     */
+    @Override
+    public Integer getMarkCount(Long msgId, Integer markType) {
+        return lambdaQuery()
+                .eq(MessageMark::getMsgId, msgId)
+                .eq(MessageMark::getType, markType)
+                .eq(MessageMark::getStatus, NormalOrNoEnum.NORMAL.getStatus())
+                .count();
+    }
 }

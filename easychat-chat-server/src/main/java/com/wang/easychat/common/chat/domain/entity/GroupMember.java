@@ -9,8 +9,7 @@ import java.util.Date;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 /**
@@ -23,6 +22,9 @@ import lombok.experimental.Accessors;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @TableName("group_member")
 @ApiModel(value="GroupMember对象", description="群成员表")

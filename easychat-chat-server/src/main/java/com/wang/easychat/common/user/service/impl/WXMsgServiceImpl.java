@@ -101,6 +101,7 @@ public class WXMsgServiceImpl implements WXMsgService {
     private Integer getEventKey(WxMpXmlMessage wxMpXmlMessage) {
         try {
             String eventKey = wxMpXmlMessage.getEventKey();
+            eventKey = eventKey.replace("qrscene_", "");
             return Integer.parseInt(eventKey);
         } catch (Exception e) {
             log.error("getEventKey error eventKey:{}", wxMpXmlMessage.getEventKey(), e);
@@ -122,4 +123,5 @@ public class WXMsgServiceImpl implements WXMsgService {
         update.setName("用户" + update.getId());
         userService.updateById(update);
     }
+
 }

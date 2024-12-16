@@ -16,6 +16,7 @@ import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.IUserRoleService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.LoginService;
+import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.websocket.NettyUtil;
 import com.wang.easychat.common.websocket.domain.dto.WSChannelExtraDTO;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
@@ -65,6 +66,8 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Autowired
     @Qualifier("websocketExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private UserCache userCache;
 
     /**
      * 管理所有用户的连接(登录用户/游客)
@@ -148,10 +151,13 @@ public class WebSocketServiceImpl implements WebSocketService {
         sendMsg(channel, WebSocektAdapter.buildResp(user, token,  roleService.hasPower(user.getId(), RoleEnum.CHAT_MANAGER)));
         RedisUtils.del(RedisKey.getKey(RedisKey.WAIT_LOGIN_USER_CODE, user.getId()));
 
-        user.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
-        user.setLastOptTime(new Date());
-        user.refreshIp(NettyUtil.getAttr(channel, NettyUtil.IP));
-        applicationEventPublisher.publishEvent(new UserOnLineEvent(this, user));
+        //发送用户上线事件
+        boolean online = userCache.isOnline(user.getId());
+        if (!online) {
+            user.setLastOptTime(new Date());
+            user.refreshIp(NettyUtil.getAttr(channel, NettyUtil.IP));
+            applicationEventPublisher.publishEvent(new UserOnLineEvent(this, user));
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.wang.easychat.common.common.utils;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.lang.Pair;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
@@ -8,10 +9,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
+import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @ClassDescription: 游标分页工具类
@@ -19,9 +25,32 @@ import java.util.function.Consumer;
  * @Date: 2024/11/25
  **/
 public class CursorUtils {
+    /**
+     * 通过redis获取需要查询的游标
+     */
+    public static <T> CursorPageBaseResp<Pair<T, Double>> gerCurSorPageByRedis(CursorPageBaseReq cursorPageBaseReq, String redisKey, Function<String, T> typeConvert){
+        Set<ZSetOperations.TypedTuple<String>> typedTuples;
+        if (StringUtils.isBlank(cursorPageBaseReq.getCursor())) {
+            // 第一次获取
+            typedTuples = RedisUtils.zReverseRangeWithScores(redisKey, cursorPageBaseReq.getPageSize());
+        } else {
+            typedTuples = RedisUtils.zReverseRangeByScoreWithScores(redisKey, Double.parseDouble(cursorPageBaseReq.getCursor()), cursorPageBaseReq.getPageSize());
+        }
+        List<Pair<T, Double>> result = typedTuples
+                .stream()
+                .map(a -> Pair.of(typeConvert.apply(a.getValue()), a.getScore()))
+                .sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue()))
+                .collect(Collectors.toList());
+        String cursor = Optional.ofNullable(CollectionUtil.getLast(result))
+                .map(Pair::getValue)
+                .map(String::valueOf)
+                .orElse(null);
+        Boolean isLast = result.size() != cursorPageBaseReq.getPageSize();
+        return new CursorPageBaseResp<>(cursor, isLast, result);
+    }
 
     /**
-     * 获取需要查询的游标
+     * 通过mysql获取需要查询的游标
      */
     public static <T> CursorPageBaseResp<T> getCursorPageByMysql(
             IService<T> service, CursorPageBaseReq request,
@@ -37,7 +66,6 @@ public class CursorUtils {
         }
         // 游标方向
         wrapper.orderByDesc(cursorColumn);
-        wrapper.last("LIMIT 10");
         // todo 分页限制失效
         Page<T> page = service.page(request.plusPage(), wrapper);
         // 取出游标

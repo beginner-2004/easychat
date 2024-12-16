@@ -41,10 +41,10 @@ public class Contact implements Serializable {
     private Long roomId;
 
     @ApiModelProperty(value = "阅读到的时间")
-    private LocalDateTime readTime;
+    private Date readTime;
 
     @ApiModelProperty(value = "会话内消息最后更新的时间(只有普通会话需要维护，全员会话不需要维护)")
-    private LocalDateTime activeTime;
+    private Date activeTime;
 
     @ApiModelProperty(value = "会话最新消息id")
     private Long lastMsgId;

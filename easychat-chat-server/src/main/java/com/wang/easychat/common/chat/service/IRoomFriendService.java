@@ -1,5 +1,6 @@
 package com.wang.easychat.common.chat.service;
 
+import com.wang.easychat.common.chat.domain.entity.Room;
 import com.wang.easychat.common.chat.domain.entity.RoomFriend;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -32,4 +33,18 @@ public interface IRoomFriendService extends IService<RoomFriend> {
      * 根据roomId查询房间信息
      */
     RoomFriend getByRoomId(Long roomId);
+
+    /**
+     * 通过roomIds查找
+     * @param roomIds
+     * @return
+     */
+    List<RoomFriend> listByRoomIds(List<Long> roomIds);
+
+    /**
+     * 通过roomKey查找房间
+     * @param roomKey
+     * @return
+     */
+    RoomFriend getRoomFriend(String roomKey);
 }

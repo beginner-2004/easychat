@@ -3,6 +3,7 @@ package com.wang.easychat.common.common.event.listener;
 import com.wang.easychat.common.common.event.UserOnLineEvent;
 import com.wang.easychat.common.common.event.UserRegisterEvent;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.enums.IdemporentEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.enums.UserActiveStatusEnum;
@@ -39,9 +40,9 @@ public class UserOnlineListener {
         update.setId(user.getId());
         update.setLastOptTime(user.getLastOptTime());
         update.setIpInfo(user.getIpInfo());
-        update.setActiveStatus(UserActiveStatusEnum.ONLINE.getStatus());
+        update.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
         userService.updateById(update);
-        // 用户ip详情的解析
+        //更新用户ip详情
         ipService.refreshIpDetailAsync(user.getId());
     }
 

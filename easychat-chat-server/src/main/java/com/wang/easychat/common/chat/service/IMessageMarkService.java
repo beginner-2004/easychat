@@ -21,4 +21,18 @@ public interface IMessageMarkService extends IService<MessageMark> {
      * @return
      */
     List<MessageMark> getValidMarkByMsgIdBatch(List<Long> collect);
+
+    /**
+     * 获取标记数据
+     * @return
+     */
+    MessageMark get(Long uid, Long msgId, Integer markType);
+
+    /**
+     * 获取标记次数
+     * @param msgId
+     * @param markType
+     * @return
+     */
+    Integer getMarkCount(Long msgId, Integer markType);
 }

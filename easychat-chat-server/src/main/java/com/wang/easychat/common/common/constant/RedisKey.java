@@ -6,7 +6,7 @@ package com.wang.easychat.common.common.constant;
  * @Date: 2024/11/12
  **/
 public class RedisKey {
-    private static final String BASE_KEY = "mallchat:chat:";
+    private static final String BASE_KEY = "easychat:chat:";
 
     /**
      * 用户token的key
@@ -47,6 +47,11 @@ public class RedisKey {
      * 热门房间列表
      */
     public static final String HOT_ROOM_ZET = "hotRoom";
+
+    /**
+     * 在线用户列表
+     */
+    public static final String ONLINE_UID_ZET = "online";
 
 
 

@@ -1,5 +1,6 @@
 package com.wang.easychat.common.user.service.adapter;
 
+import com.wang.easychat.common.chat.domain.dto.ChatMessageMarkDTO;
 import com.wang.easychat.common.chat.domain.entity.dto.ChatMsgRecallDTO;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.chat.service.ChatService;
@@ -8,6 +9,8 @@ import com.wang.easychat.common.websocket.domain.vo.resp.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
 
 /**
  * @ClassDescription:
@@ -38,6 +41,18 @@ public class WSAdapter {
         WSMsgRecall recall = new WSMsgRecall();
         BeanUtils.copyProperties(recallDTO, recall);
         wsBaseResp.setData(recall);
+        return wsBaseResp;
+    }
+
+    public static WSBaseResp<?> buildMsgMarkSend(ChatMessageMarkDTO dto, Integer markCount) {
+        WSMsgMark.WSMsgMarkItem item = new WSMsgMark.WSMsgMarkItem();
+        BeanUtils.copyProperties(dto, item);
+        item.setMarkCount(markCount);
+        WSBaseResp<WSMsgMark> wsBaseResp = new WSBaseResp<>();
+        wsBaseResp.setType(WSRespTypeEnum.MARK.getType());
+        WSMsgMark mark = new WSMsgMark();
+        mark.setMarkList(Collections.singletonList(item));
+        wsBaseResp.setData(mark);
         return wsBaseResp;
     }
 }

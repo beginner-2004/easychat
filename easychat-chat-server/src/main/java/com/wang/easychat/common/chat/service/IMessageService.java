@@ -3,7 +3,10 @@ package com.wang.easychat.common.chat.service;
 import com.wang.easychat.common.chat.domain.entity.Message;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wang.easychat.common.chat.domain.vo.req.ChatMessagePageReq;
+import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
+
+import java.util.Date;
 
 /**
  * <p>
@@ -31,5 +34,13 @@ public interface IMessageService extends IService<Message> {
      * @param lastMsgId
      * @return
      */
-    CursorPageBaseResp<Message> getCursorPage(Long roomId, ChatMessagePageReq request, Long lastMsgId);
+    CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId);
+
+    /**
+     * 获取房间未读消息条数
+     * @param roomId
+     * @param readTime
+     * @return
+     */
+    Integer getUnReadCount(Long roomId, Date readTime);
 }

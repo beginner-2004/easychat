@@ -29,8 +29,8 @@ public class RoomGroupCache extends AbstractRedisStringCache<Long, RoomGroup> {
 
     @Override
     protected Map<Long, RoomGroup> load(List<Long> roomIds) {
-        List<RoomGroup> roomGroups = roomGroupService.listByIds(roomIds);
-        return roomGroups.stream().collect(Collectors.toMap(RoomGroup::getId, Function.identity()));
+        List<RoomGroup> roomGroups = roomGroupService.listByRoomIds(roomIds);
+        return roomGroups.stream().collect(Collectors.toMap(RoomGroup::getRoomId, Function.identity()));
     }
 
     @Override

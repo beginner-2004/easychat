@@ -4,35 +4,39 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.wang.easychat.common.chat.domain.dto.MsgReadInfoDTO;
 import com.wang.easychat.common.chat.domain.entity.*;
+import com.wang.easychat.common.chat.domain.enums.MessageMarkActTypeEnum;
 import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
-import com.wang.easychat.common.chat.domain.vo.req.ChatMessageBaseReq;
-import com.wang.easychat.common.chat.domain.vo.req.ChatMessagePageReq;
-import com.wang.easychat.common.chat.domain.vo.req.ChatMessageReq;
+import com.wang.easychat.common.chat.domain.vo.req.*;
+import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageReadResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.chat.service.*;
 import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
+import com.wang.easychat.common.chat.service.adapter.RoomAdapter;
 import com.wang.easychat.common.chat.service.cache.RoomCache;
 import com.wang.easychat.common.chat.service.cache.RoomGroupCache;
+import com.wang.easychat.common.chat.service.strategy.mark.AbstractMsgMarkStrategy;
+import com.wang.easychat.common.chat.service.strategy.mark.MsgMarkFactory;
 import com.wang.easychat.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.wang.easychat.common.chat.service.strategy.msg.MsgHandlerFactory;
 import com.wang.easychat.common.chat.service.strategy.msg.RecallMsgHandler;
+import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.NormalOrNoEnum;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.MessageSendEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -126,6 +130,79 @@ public class ChatServiceImpl implements ChatService {
         recallMsgHandler.recall(uid, msg);
     }
 
+    /**
+     * 标记消息
+     *
+     * @param uid
+     * @param request
+     */
+    @Override
+    @RedissonLock(key = "#uid")
+    public void setMsgMark(Long uid, ChatMessageMarkReq request) {
+        AbstractMsgMarkStrategy strategy = MsgMarkFactory.getStrategyNoNull(request.getMarkType());
+        switch (MessageMarkActTypeEnum.of(request.getActType())){
+            case MARK:
+                strategy.mark(uid, request.getMsgId());
+                break;
+            case UN_MARK:
+                strategy.unMark(uid, request.getMsgId());
+                break;
+        }
+    }
+
+    /**
+     * 查询消息已读情况
+     */
+    @Override
+    public CursorPageBaseResp<ChatMessageReadResp> getReadPage(@Nullable Long uid, ChatMessageReadReq request) {
+        Message msg = messageService.getById(request.getMsgId());
+        AssertUtil.isNotEmpty(msg, "消息id有误");
+        AssertUtil.equal(uid, msg.getFromUid(), "只能查看自己的消息");
+        CursorPageBaseResp<Contact> page;
+        if (request.getSearchType() == 1){
+            // 查询已读
+            page = contactService.getReadPage(msg, request);
+        }else {
+            // 查询未读
+            page = contactService.getUnReadPage(msg, request);
+        }
+        if (CollectionUtil.isEmpty(page.getList())) {
+            return CursorPageBaseResp.empty();
+        }
+
+        return CursorPageBaseResp.init(page, RoomAdapter.buildReadResp(page.getList()));
+    }
+
+    /**
+     * 读取消息
+     */
+    @Override
+    @RedissonLock(key = "#uid")
+    public void msgRead(Long uid, ChatMessageMemberReq request) {
+        Contact contact = contactService.get(uid, request.getRoomId());
+        if (Objects.nonNull(contact)) {
+            Contact update = new Contact();
+            update.setId(contact.getId());
+            update.setReadTime(new Date());
+            contactService.updateById(update);
+        } else {
+            Contact insert = new Contact();
+            insert.setUid(uid);
+            insert.setRoomId(request.getRoomId());
+            insert.setReadTime(new Date());
+            contactService.save(insert);
+        }
+    }
+
+    @Override
+    public Collection<MsgReadInfoDTO> getMsgReadInfo(Long uid, ChatMessageReadInfoReq request) {
+        List<Message> messages = messageService.listByIds(request.getMsgIds());
+        messages.forEach(msg -> {
+            AssertUtil.equal(uid, msg.getFromUid(), "只能查询自己发送的消息");
+        });
+        return contactService.getMsgReadInfo(messages).values();
+    }
+
     private void checkRecall(Long uid, Message msg) {
         AssertUtil.isNotEmpty(msg, "消息有误");
         AssertUtil.notEqual(msg.getType(), MessageTypeEnum.RECALL.getType(), "消息无法撤回");
@@ -170,13 +247,17 @@ public class ChatServiceImpl implements ChatService {
      */
     private void check(ChatMessageReq request, Long uid) {
         Room room = roomCache.get(request.getRoomId());
+        if (Objects.equals(uid, User.UID_SYSTEM)){
+            // 系统消息跳过检验
+            return;
+        }
         if (room.isHotRoom()){
             // 全员群跳过检验
             return;
         }
         if (room.isRoomFriend()){
-            RoomFriend roomFriend = roomFriendService.getById(request.getRoomId());
-            AssertUtil.equal(NormalOrNoEnum.NORMAL.getStatus(), roomFriend.getStatus(), "您已经被对方拉黑");
+            RoomFriend roomFriend = roomFriendService.getByRoomId(request.getRoomId());
+            AssertUtil.equal(NormalOrNoEnum.NORMAL.getStatus(), roomFriend.getStatus(), "请先添加好友！");
             AssertUtil.isTrue(uid.equals(roomFriend.getUid1()) || uid.equals(roomFriend.getUid2()), "您已经被对方拉黑");
         }
         if (room.isRoomGroup()){

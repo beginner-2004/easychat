@@ -51,7 +51,7 @@ public class RoomFriendServiceImpl extends ServiceImpl<RoomFriendMapper, RoomFri
             // 创建 roomFriend 关系
             roomFriend = createFriendRoom(room.getId(), uidList);
         }
-        return null;
+        return roomFriend;
     }
 
     /**
@@ -76,6 +76,30 @@ public class RoomFriendServiceImpl extends ServiceImpl<RoomFriendMapper, RoomFri
         return lambdaQuery()
                 .eq(RoomFriend::getRoomId, roomId)
                 .one();
+    }
+
+    /**
+     * 通过roomIds查找
+     *
+     * @param roomIds
+     * @return
+     */
+    @Override
+    public List<RoomFriend> listByRoomIds(List<Long> roomIds) {
+        return lambdaQuery()
+                .in(RoomFriend::getRoomId, roomIds)
+                .list();
+    }
+
+    /**
+     * 通过roomKey查找房间
+     *
+     * @param roomKey
+     * @return
+     */
+    @Override
+    public RoomFriend getRoomFriend(String roomKey) {
+        return getByKey(roomKey);
     }
 
     private void disableRoom(String key) {

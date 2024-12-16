@@ -5,7 +5,9 @@ import com.wang.easychat.common.chat.domain.entity.Message;
 import com.wang.easychat.common.chat.domain.entity.MessageMark;
 import com.wang.easychat.common.chat.domain.enums.MessageMarkTypeEnum;
 import com.wang.easychat.common.chat.domain.enums.MessageStatusEnum;
+import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
 import com.wang.easychat.common.chat.domain.vo.req.ChatMessageReq;
+import com.wang.easychat.common.chat.domain.vo.req.msg.TextMsgReq;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.wang.easychat.common.chat.service.strategy.msg.MsgHandlerFactory;
@@ -75,5 +77,20 @@ public class MessageAdapter {
         userInfo.setUid(fromUid);
         return userInfo;
 
+    }
+
+    /**
+     * 构建好友消息体
+     * @param roomId
+     * @return
+     */
+    public static ChatMessageReq buildAgreeMsg(Long roomId) {
+        ChatMessageReq chatMessageReq = new ChatMessageReq();
+        chatMessageReq.setRoomId(roomId);
+        chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
+        TextMsgReq textMsgReq = new TextMsgReq();
+        textMsgReq.setContent("我们已经是好友了，开始聊天吧");
+        chatMessageReq.setBody(textMsgReq);
+        return chatMessageReq;
     }
 }

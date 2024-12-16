@@ -1,5 +1,6 @@
 package com.wang.easychat.common.user.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.event.UserBlackEvent;
@@ -9,6 +10,7 @@ import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
 import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.entity.*;
 import com.wang.easychat.common.user.domain.enums.BlackTypeEnum;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.domain.enums.ItemTypeEnum;
 import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
@@ -207,6 +209,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             dto.setDescribe(itemConfig.getDescribe());
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取传入列表中在线人数
+     *
+     * @param memberUidList
+     * @return
+     */
+    @Override
+    public Integer getOnlineCount(List<Long> memberUidList) {
+        return lambdaQuery()
+                .eq(User::getActiveStatus, ChatActiveStatusEnum.ONLINE.getStatus())
+                .in(CollectionUtil.isNotEmpty(memberUidList), User::getId, memberUidList)
+                .count();
     }
 
     private List<Long> getNeedSyncUidList(List<SummeryInfoReq.infoReq> reqList) {

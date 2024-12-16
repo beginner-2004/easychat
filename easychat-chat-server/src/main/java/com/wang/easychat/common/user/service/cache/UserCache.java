@@ -88,4 +88,18 @@ public class UserCache {
         return RedisUtils.mget(keys, Long.class);
 
     }
+
+    /**
+     * 获取在线人数
+     * @return
+     */
+    public Long getOnlineNum() {
+        String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
+        return RedisUtils.zCard(onlineKey);
+    }
+
+    public boolean isOnline(Long uid) {
+        String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
+        return RedisUtils.zIsMember(onlineKey, uid);
+    }
 }

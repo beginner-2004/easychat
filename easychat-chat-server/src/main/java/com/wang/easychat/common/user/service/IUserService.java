@@ -51,4 +51,11 @@ public interface IUserService extends IService<User> {
     List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req);
 
     List<ItemInfoDTO> getItemInfo(ItemInfoReq req);
+
+    /**
+     * 获取传入列表中在线人数
+     * @param memberUidList
+     * @return
+     */
+    Integer getOnlineCount(List<Long> memberUidList);
 }

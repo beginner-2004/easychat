@@ -3,14 +3,18 @@ package com.wang.easychat.common.user.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
+import com.wang.easychat.common.chat.service.ChatService;
+import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.req.PageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.domain.vo.resp.PageBaseResp;
+import com.wang.easychat.common.common.event.FriendApplyEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.common.utils.CursorUtils;
 import com.wang.easychat.common.chat.domain.entity.RoomFriend;
+import com.wang.easychat.common.user.domain.dto.FriendApplyDTO;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.entity.UserApply;
 import com.wang.easychat.common.user.domain.entity.UserFriend;
@@ -32,6 +36,7 @@ import com.wang.easychat.common.user.service.adapter.FriendAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +64,10 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
     private IUserApplyService userApplyService;
     @Autowired
     private IRoomFriendService roomFriendService;
+    @Autowired
+    private ChatService chatService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
 
     /**
@@ -149,7 +158,12 @@ public class UserFriendServiceImpl extends ServiceImpl<UserFriendMapper, UserFri
         createFriend(uid, userApply.getUid());
         //创建一个聊天房间
         RoomFriend roomFriend = roomFriendService.createFriendRoom(Arrays.asList(uid, userApply.getUid()));
-        // todo 发送一条同意消息。。我们已经是好友了，开始聊天吧
+        //发送一条同意消息。。我们已经是好友了，开始聊天吧
+        FriendApplyDTO build = FriendApplyDTO.builder()
+                .chatMessageReq(MessageAdapter.buildAgreeMsg(roomFriend.getRoomId()))
+                .uid(uid)
+                .build();
+        applicationEventPublisher.publishEvent(new FriendApplyEvent(this, build));
     }
 
     /**

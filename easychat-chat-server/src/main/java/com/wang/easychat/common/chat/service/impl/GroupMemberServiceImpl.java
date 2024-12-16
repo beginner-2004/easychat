@@ -42,4 +42,19 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
                 .list();
         return list.stream().map(GroupMember::getUid).collect(Collectors.toList());
     }
+
+    @Override
+    public GroupMember getByUid(Long uid) {
+        return lambdaQuery()
+                .eq(GroupMember::getUid, uid)
+                .one();
+    }
+
+    @Override
+    public GroupMember getByUidAndGroupId(Long uid, Long groupId) {
+        return lambdaQuery()
+                .eq(GroupMember::getUid, uid)
+                .eq(GroupMember::getGroupId, groupId)
+                .one();
+    }
 }

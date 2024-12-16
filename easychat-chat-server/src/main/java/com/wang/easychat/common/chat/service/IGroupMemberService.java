@@ -23,4 +23,9 @@ public interface IGroupMemberService extends IService<GroupMember> {
      * 查询群组所有成员
      */
     List<Long> getMemberUidList(Long groupId);
+
+    GroupMember getByUid(Long uid);
+
+    GroupMember getByUidAndGroupId(Long uid, Long groupId);
+
 }
