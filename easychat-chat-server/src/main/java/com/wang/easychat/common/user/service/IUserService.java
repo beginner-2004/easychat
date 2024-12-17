@@ -58,4 +58,10 @@ public interface IUserService extends IService<User> {
      * @return
      */
     Integer getOnlineCount(List<Long> memberUidList);
+
+    /**
+     * 查找用户
+     * @return
+     */
+    List<User> getMemberList();
 }

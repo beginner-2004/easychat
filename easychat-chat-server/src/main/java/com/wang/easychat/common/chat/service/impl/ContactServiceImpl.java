@@ -1,5 +1,8 @@
 package com.wang.easychat.common.chat.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wang.easychat.common.chat.domain.dto.MsgReadInfoDTO;
 import com.wang.easychat.common.chat.domain.entity.Contact;
 import com.wang.easychat.common.chat.domain.entity.Message;
@@ -152,6 +155,17 @@ public class ContactServiceImpl extends ServiceImpl<ContactMapper, Contact> impl
                 .in(Contact::getRoomId, roomIds)
                 .eq(Contact::getUid, uid)
                 .list();
+    }
+
+    /**
+     * 删除会话
+     */
+    @Override
+    public Boolean removeByRoomId(Long roomId, List<Long> uidList) {
+        LambdaQueryWrapper<Contact> wrapper = new QueryWrapper<Contact>().lambda()
+                .eq(Contact::getRoomId, roomId)
+                .in(CollectionUtil.isNotEmpty(uidList), Contact::getUid, uidList);
+        return remove(wrapper);
     }
 
     private Integer getReadCount(Message msg) {

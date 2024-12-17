@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Pair;
 import com.wang.easychat.common.chat.domain.dto.MsgReadInfoDTO;
 import com.wang.easychat.common.chat.domain.entity.*;
 import com.wang.easychat.common.chat.domain.enums.MessageMarkActTypeEnum;
@@ -27,8 +28,10 @@ import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.MessageSendEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
+import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,6 +204,18 @@ public class ChatServiceImpl implements ChatService {
             AssertUtil.equal(uid, msg.getFromUid(), "只能查询自己发送的消息");
         });
         return contactService.getMsgReadInfo(messages).values();
+    }
+
+    /**
+     * 获取群成员列表
+     *
+     * @param memberUidList
+     * @param request
+     * @return
+     */
+    @Override
+    public CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, MemberReq request) {
+        Pair<ChatActiveStatusEnum, String> pair = ChatMemberHelper.getCursorPair(request.getCursor());
     }
 
     private void checkRecall(Long uid, Message msg) {

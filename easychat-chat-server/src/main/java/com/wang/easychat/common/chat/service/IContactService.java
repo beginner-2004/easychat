@@ -81,4 +81,11 @@ public interface IContactService extends IService<Contact> {
      * @return
      */
     List<Contact> getByRoomIdsAndUid(List<Long> roomIds, Long uid);
+
+    /**
+     * 删除会话
+     * @param roomId
+     * @param uidList
+     */
+    Boolean removeByRoomId(Long roomId, List<Long> uidList);
 }

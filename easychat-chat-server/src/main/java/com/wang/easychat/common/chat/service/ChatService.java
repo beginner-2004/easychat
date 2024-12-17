@@ -6,8 +6,10 @@ import com.wang.easychat.common.chat.domain.vo.req.*;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageReadResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
+import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
     @ClassDescription:
@@ -63,4 +65,12 @@ public interface ChatService {
     void msgRead(Long uid, ChatMessageMemberReq request);
 
     Collection<MsgReadInfoDTO> getMsgReadInfo(Long uid, ChatMessageReadInfoReq request);
+
+    /**
+     * 获取群成员列表
+     * @param memberUidList
+     * @param request
+     * @return
+     */
+    CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, MemberReq request);
 }

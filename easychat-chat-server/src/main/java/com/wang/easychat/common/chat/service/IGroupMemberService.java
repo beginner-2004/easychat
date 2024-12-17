@@ -2,6 +2,7 @@ package com.wang.easychat.common.chat.service;
 
 import com.wang.easychat.common.chat.domain.entity.GroupMember;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wang.easychat.common.chat.domain.vo.req.MemberExitReq;
 
 import java.util.List;
 
@@ -24,8 +25,28 @@ public interface IGroupMemberService extends IService<GroupMember> {
      */
     List<Long> getMemberUidList(Long groupId);
 
+    /**
+     * 查询群组传入的成员
+     */
+    List<Long> getMemberUidList(Long groupId, List<Long> uidList);
+
+
     GroupMember getByUid(Long uid);
 
     GroupMember getByUidAndGroupId(Long uid, Long groupId);
 
+    /**
+     * 退出群聊
+     * @param uid
+     * @param request
+     */
+    void exitGroup(Long uid, MemberExitReq request);
+
+    /**
+     * 根据id删除群成员
+     * @param groupId
+     * @param uidList
+     * @return
+     */
+    Boolean removeByGroupId(Long groupId, List<Object> uidList);
 }

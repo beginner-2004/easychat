@@ -1,5 +1,6 @@
 package com.wang.easychat.common.websocket.domain.vo.resp;
 
+import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import lombok.Data;
 
 /**
@@ -8,5 +9,5 @@ import lombok.Data;
  * @Date: 2024/11/7
  **/
 @Data
-public class WSMessage {
+public class WSMessage extends ChatMessageResp {
 }

@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FriendResp {
     @ApiModelProperty("好友id")
-    private Long id;
+    private Long uid;
 
     /**
      * @see com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum

@@ -7,6 +7,7 @@ import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -43,4 +44,9 @@ public interface IMessageService extends IService<Message> {
      * @return
      */
     Integer getUnReadCount(Long roomId, Date readTime);
+
+    /**
+     * 根据roomId,uid集合删除消息记录
+     */
+    Boolean removeByRoomId(Long roomId, List uidList);
 }

@@ -62,7 +62,7 @@ public class GroupMemberAddListener {
     }
 
     /**
-     * 给前端返回消息体
+     * 给前端返回添加成员
      * @param event
      */
     @Async

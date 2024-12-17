@@ -53,4 +53,15 @@ public class RoomAdapter {
         chatMessageReq.setBody(sb.toString());
         return chatMessageReq;
     }
+
+    /**
+     * 构造解散群聊消息体
+     */
+    public static ChatMessageReq buildGroupDelMessage(Long roomId) {
+        ChatMessageReq chatMessageReq = new ChatMessageReq();
+        chatMessageReq.setRoomId(roomId);
+        chatMessageReq.setMsgType(MessageTypeEnum.SYSTEM.getType());
+        chatMessageReq.setBody("群聊已解散");
+        return chatMessageReq;
+    }
 }

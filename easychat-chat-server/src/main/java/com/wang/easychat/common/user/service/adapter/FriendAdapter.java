@@ -33,7 +33,7 @@ public class FriendAdapter {
         return list.stream()
                 .map(userFriend -> {
                     FriendResp friendResp = new FriendResp();
-                    friendResp.setId(userFriend.getId());
+                    friendResp.setUid(userFriend.getFriendUid());
                     User user = userMap.get(userFriend.getFriendUid());
                     if (Objects.nonNull(user)){
                         friendResp.setActiveStatus(user.getActiveStatus());

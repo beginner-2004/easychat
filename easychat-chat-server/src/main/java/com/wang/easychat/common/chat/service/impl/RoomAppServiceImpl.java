@@ -7,11 +7,12 @@ import com.wang.easychat.common.chat.domain.entity.*;
 import com.wang.easychat.common.chat.domain.enums.GroupRoleAPPEnum;
 import com.wang.easychat.common.chat.domain.enums.HotFlagEnum;
 import com.wang.easychat.common.chat.domain.enums.RoomTypeEnum;
-import com.wang.easychat.common.chat.domain.vo.req.GroupAddReq;
+import com.wang.easychat.common.chat.domain.vo.req.*;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatRoomResp;
 import com.wang.easychat.common.chat.domain.vo.resp.MemberResp;
 import com.wang.easychat.common.chat.service.*;
 import com.wang.easychat.common.chat.service.adapter.ChatAdapter;
+import com.wang.easychat.common.chat.service.adapter.MemberAdapter;
 import com.wang.easychat.common.chat.service.adapter.RoomAdapter;
 import com.wang.easychat.common.chat.service.cache.HotRoomCache;
 import com.wang.easychat.common.chat.service.cache.RoomCache;
@@ -19,6 +20,7 @@ import com.wang.easychat.common.chat.service.cache.RoomFriendCache;
 import com.wang.easychat.common.chat.service.cache.RoomGroupCache;
 import com.wang.easychat.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.wang.easychat.common.chat.service.strategy.msg.MsgHandlerFactory;
+import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.GroupMemberAddEvent;
@@ -27,13 +29,17 @@ import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.user.service.cache.UserInfoCache;
+import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
@@ -67,11 +73,13 @@ public class RoomAppServiceImpl implements IRoomAppService {
     @Autowired
     private IRoomService roomService;
     @Autowired
-    private IGroupMemberService groupMemberService;
-    @Autowired
     private UserCache userCache;
     @Autowired
+    private IGroupMemberService groupMemberService;
+    @Autowired
     private IUserService userService;
+    @Autowired
+    private ChatService chatService;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
@@ -175,6 +183,74 @@ public class RoomAppServiceImpl implements IRoomAppService {
                 .onlineNum(onlineNum)
                 .role(groupRole.getType())
                 .build();
+    }
+
+    /**
+     * 邀请好友
+     * @param uid
+     * @param request
+     */
+    @Override
+    @RedissonLock(key = "#request.roomId")
+    @Transactional(rollbackFor = Exception.class)
+    public void addMember(Long uid, MemberAddReq request) {
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误！");
+        AssertUtil.isFalse(isHotGroup(room), "全员群不需要邀请好友");
+        RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(roomGroup, " 房间号有误");
+        GroupMember self = groupMemberService.getMember(roomGroup.getId(), uid);
+        AssertUtil.isNotEmpty(self, "您不是群成员");
+        List<Long> memberBatch = groupMemberService.getMemberUidList(roomGroup.getId(), request.getUidList());
+        Set<Long> existUid = new HashSet<>(memberBatch);
+        List<Long> needAddUidList = request.getUidList().stream().filter(a -> !existUid.contains(a)).distinct().collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(needAddUidList)){
+            return;
+        }
+        List<GroupMember> groupMembers = MemberAdapter.buildMemberAdd(roomGroup.getId(), needAddUidList);
+        groupMemberService.saveBatch(groupMembers);
+        applicationEventPublisher.publishEvent(new GroupMemberAddEvent(this, roomGroup, groupMembers, uid));
+
+    }
+
+    /**
+     * @param request
+     * @return
+     */
+    @Override
+    @Cacheable(cacheNames = "member", key = "'memberList.' + #request.roomId")
+    public List<ChatMemberListResp> getMemberList(ChatMessageMemberReq request) {
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误");
+        if (isHotGroup(room)){  // 全员群只展示100名用户
+            List<User> memberList = userService.getMemberList();
+            return MemberAdapter.buildMemberList(memberList);
+        }else {
+            RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
+            List<Long> memberUidList = groupMemberService.getMemberUidList(roomGroup.getId());
+            Map<Long, User> batch = userInfoCache.getBatch(memberUidList);
+            return MemberAdapter.buildMemberList(batch);
+        }
+    }
+
+    /**
+     * 查询成员列表
+     *
+     * @param request
+     * @return
+     */
+    @Override
+    public CursorPageBaseResp<ChatMemberResp> getMemberPage(MemberReq request) {
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误");
+        List<Long> memberUidList;
+        if (isHotGroup(room)){  // 全员群展示所有用户
+            memberUidList = null;
+        }else { // 只展示房间内的群成员
+            RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
+            memberUidList = groupMemberService.getMemberUidList(roomGroup.getId());
+        }
+        return chatService.getMemberPage(memberUidList, request);
     }
 
     private GroupRoleAPPEnum getGroupRole(Long uid, RoomGroup roomGroup, Room room) {
