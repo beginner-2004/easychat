@@ -57,7 +57,7 @@ public class UserEmojiServiceImpl extends ServiceImpl<UserEmojiMapper, UserEmoji
         int count = countByUid(uid);
         AssertUtil.isFalse(count > 30, "最多只能添加30个表情包！");
         // 检验表情是否存在
-        Integer existsCount = countByExpressionUrl(req.getExpressionUrl());
+        Integer existsCount = countByExpressionUrl(req.getExpressionUrl(), uid);
         AssertUtil.isFalse(existsCount > 0, "当前表情已经存在!");
         UserEmoji insert = UserEmoji.builder()
                 .uid(uid)
@@ -81,9 +81,10 @@ public class UserEmojiServiceImpl extends ServiceImpl<UserEmojiMapper, UserEmoji
         removeById(id);
     }
 
-    private Integer countByExpressionUrl(String expressionUrl) {
+    private Integer countByExpressionUrl(String expressionUrl, Long uid) {
         return lambdaQuery()
                 .eq(UserEmoji::getExpressionUrl, expressionUrl)
+                .eq(UserEmoji::getUid, uid)
                 .count();
     }
 
