@@ -32,8 +32,6 @@ public class DelGroupListener {
     @Autowired
     private PushService pushService;
 
-    // todo 解散群聊事件
-
     /**
      * 向群中发送解散群聊消息
      */

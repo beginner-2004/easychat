@@ -55,12 +55,12 @@ public class NettyWebSocketServer {
     public void run() throws InterruptedException {
         // 服务器启动引导对象
         ServerBootstrap serverBootstrap = new ServerBootstrap();
-        serverBootstrap.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
+        serverBootstrap.group(bossGroup, workerGroup)   // 设置主从线程组
+                .channel(NioServerSocketChannel.class)  // 设置NIO双向通道类型
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new LoggingHandler(LogLevel.INFO)) // 为 bossGroup 添加 日志处理器
-                .childHandler(new ChannelInitializer<SocketChannel>() {
+                .childHandler(new ChannelInitializer<SocketChannel>() { // 子处理器，用于workerGroup
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
@@ -76,8 +76,7 @@ public class NettyWebSocketServer {
                          *  2. 这就是为什么当浏览器发送大量数据时，就会发出多次 http请求的原因
                          */
                         pipeline.addLast(new HttpObjectAggregator(8192));
-                        // todo 保存用户ip
-//                        pipeline.addLast(new HttpHeadersHandler());
+                        // 保存用户ip
                         // 保存请求头
                         pipeline.addLast(new MyHanderCollecctHandler());
                         /**
@@ -95,6 +94,7 @@ public class NettyWebSocketServer {
                 });
         // 启动服务器，监听端口，阻塞直到启动成功
         serverBootstrap.bind(WEB_SOCKET_PORT).sync();
+        log.info("WebSocketServer 启动成功!");
     }
 
 }

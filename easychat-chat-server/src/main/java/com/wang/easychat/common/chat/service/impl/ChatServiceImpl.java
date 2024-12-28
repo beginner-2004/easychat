@@ -10,13 +10,16 @@ import com.wang.easychat.common.chat.domain.entity.*;
 import com.wang.easychat.common.chat.domain.enums.MessageMarkActTypeEnum;
 import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
 import com.wang.easychat.common.chat.domain.vo.req.*;
+import com.wang.easychat.common.chat.domain.vo.resp.ChatMemberStatisticResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageReadResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.chat.service.*;
+import com.wang.easychat.common.chat.service.adapter.MemberAdapter;
 import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
 import com.wang.easychat.common.chat.service.adapter.RoomAdapter;
 import com.wang.easychat.common.chat.service.cache.RoomCache;
 import com.wang.easychat.common.chat.service.cache.RoomGroupCache;
+import com.wang.easychat.common.chat.service.helper.ChatMemberHelper;
 import com.wang.easychat.common.chat.service.strategy.mark.AbstractMsgMarkStrategy;
 import com.wang.easychat.common.chat.service.strategy.mark.MsgMarkFactory;
 import com.wang.easychat.common.chat.service.strategy.msg.AbstractMsgHandler;
@@ -24,6 +27,7 @@ import com.wang.easychat.common.chat.service.strategy.msg.MsgHandlerFactory;
 import com.wang.easychat.common.chat.service.strategy.msg.RecallMsgHandler;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.NormalOrNoEnum;
+import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.MessageSendEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
@@ -31,6 +35,9 @@ import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
+import com.wang.easychat.common.user.service.IUserService;
+import com.wang.easychat.common.user.service.cache.UserCache;
+import com.wang.easychat.common.user.service.impl.UserServiceImpl;
 import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -70,6 +77,10 @@ public class ChatServiceImpl implements ChatService {
     private IMessageMarkService messageMarkService;
     @Autowired
     private IContactService contactService;
+    @Autowired
+    private IUserService userService;
+    @Autowired
+    private UserCache userCache;
     @Autowired
     private RecallMsgHandler recallMsgHandler;
     @Autowired
@@ -215,7 +226,52 @@ public class ChatServiceImpl implements ChatService {
      */
     @Override
     public CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, MemberReq request) {
+        // 获取需要查找的在线状态类型、时间戳
         Pair<ChatActiveStatusEnum, String> pair = ChatMemberHelper.getCursorPair(request.getCursor());
+        ChatActiveStatusEnum activeStatusEnum = pair.getKey();
+        String timeCursor = pair.getValue();
+        List<ChatMemberResp> resultList = new ArrayList<>();   // 返回的列表
+        Boolean isLast = Boolean.FALSE;
+        if (activeStatusEnum == ChatActiveStatusEnum.ONLINE){   // 在线列表
+            CursorPageBaseResp<User> cursorPage = userService.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.ONLINE);
+            resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));
+            if (cursorPage.getIsLast()) {
+                activeStatusEnum = ChatActiveStatusEnum.OFFLINE;
+                Integer leftSize = request.getPageSize() - cursorPage.getList().size();
+                cursorPage = userService.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE);
+                resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));
+            }
+            timeCursor = cursorPage.getCursor();
+            isLast = cursorPage.getIsLast();
+        } else if (activeStatusEnum == ChatActiveStatusEnum.OFFLINE) { // 离线列表
+            CursorPageBaseResp<User> cursorPage = userService.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.OFFLINE);
+            resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));
+            timeCursor = cursorPage.getCursor();
+            isLast = cursorPage.getIsLast();
+        }
+
+        // 获取群成员角色ID
+        List<Long> uidList = resultList.stream().map(ChatMemberResp::getUid).collect(Collectors.toList());
+        RoomGroup roomGroup = roomGroupService.getByRoomId(request.getRoomId());
+       Map<Long, Integer> uidMapRole = groupMemberService.getMemberMapRole(roomGroup.getId(), uidList);
+       resultList.forEach(member -> member.setRoleId(uidMapRole.get(member.getUid())));
+
+       // 组装结果
+        return new CursorPageBaseResp<>(ChatMemberHelper.generateCursor(activeStatusEnum, timeCursor), isLast, resultList);
+    }
+
+    /**
+     * 获取在线人数和总人数
+     */
+    @Override
+    public ChatMemberStatisticResp getMemberStatistic() {
+        System.out.println(Thread.currentThread().getName());
+        Long onlineNum = userCache.getOnlineNum();
+// todo        Long offlineNum = userCache.getOfflineNum();不展示总人数
+        ChatMemberStatisticResp resp = new ChatMemberStatisticResp();
+        resp.setOnlineNum(onlineNum);
+// todo      resp.setTotalNum(onlineNum + offlineNum);
+        return resp;
     }
 
     private void checkRecall(Long uid, Message msg) {
@@ -246,6 +302,7 @@ public class ChatServiceImpl implements ChatService {
         AssertUtil.isNotEmpty(receiveUid, "请先登录");
         Contact contact = contactService.getByRoomIdAndUid(room.getId(), receiveUid);
         return contact.getLastMsgId();
+
     }
 
     private List<ChatMessageResp> getMsgRespBatch(List<Message> messages, Long receiveUid) {

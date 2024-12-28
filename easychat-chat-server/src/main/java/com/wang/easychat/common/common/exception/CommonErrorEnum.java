@@ -22,6 +22,7 @@ public enum CommonErrorEnum implements ErrorEnum{
 
     @Override
     public Integer getErrorCode() {
+
         return code;
     }
 

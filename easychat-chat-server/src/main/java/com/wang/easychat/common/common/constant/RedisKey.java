@@ -53,6 +53,11 @@ public class RedisKey {
      */
     public static final String ONLINE_UID_ZET = "online";
 
+    /**
+     * 离线用户列表
+     */
+    public static final String OFFLINE_UID_ZET = "offline";
+
 
 
     public static String getKey(String key, Object... o){

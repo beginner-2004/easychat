@@ -7,7 +7,7 @@
     <groupId>com.wang.easychat</groupId>
     <artifactId>easychat</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <modules>
         <module>easychat-chat-server</module>
         <module>easychat-framework</module>
@@ -50,7 +50,7 @@
             <dependency>
                 <groupId>com.wang.easychat</groupId>
                 <artifactId>easychat-common-starter</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.0.0</version>
             </dependency>
 
             <dependency>

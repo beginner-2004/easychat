@@ -5,6 +5,7 @@ import com.wang.easychat.common.chat.domain.enums.GroupRoleEnum;
 import com.wang.easychat.common.chat.domain.vo.req.ChatMemberListResp;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
+import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
 import com.wang.easychat.common.websocket.domain.vo.resp.WSMemberChange;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -71,5 +73,15 @@ public class MemberAdapter {
 
     public static List<ChatMemberListResp> buildMemberList(Map<Long, User> batch) {
         return buildMemberList(new ArrayList<>(batch.values()));
+    }
+
+    public static List<ChatMemberResp> buildMember(List<User> list) {
+        return list.stream().map(a -> {
+            ChatMemberResp resp = new ChatMemberResp();
+            resp.setActiveStatus(a.getActiveStatus());
+            resp.setLastOptTime(a.getLastOptTime());
+            resp.setUid(a.getId());
+            return resp;
+        }).collect(Collectors.toList());
     }
 }

@@ -102,4 +102,10 @@ public class UserCache {
         String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
         return RedisUtils.zIsMember(onlineKey, uid);
     }
+
+
+    public void offline(Long id, Date lastOptTime) {
+        String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
+        RedisKey.getKey(RedisKey.OFFLINE_UID_ZET);
+    }
 }

@@ -1,13 +1,13 @@
-#logging:
-#  level:
-#    org.springframework.web: INFO
-#    com.github.binarywang.demo.wx.mp: DEBUG
-#    me.chanjar.weixin: DEBUG
-#mybatis-plus:
-#  com.wang.easychat.transaction.mapper-locations: classpath:com.wang.easychat.transaction.mapper/**/*.xml
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-#    map-underscore-to-camel-case: true
+logging:
+  level:
+    org.springframework.web: INFO
+    com.github.binarywang.demo.wx.mp: DEBUG
+    me.chanjar.weixin: DEBUG
+mybatis-plus:
+  com.wang.easychat.transaction.mapper-locations: classpath:com.wang.easychat.transaction.mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
 spring:
   profiles:
     #运行的环境

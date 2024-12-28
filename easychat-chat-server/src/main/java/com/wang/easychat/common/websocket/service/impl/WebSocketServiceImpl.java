@@ -6,6 +6,7 @@ import cn.hutool.json.JSONUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wang.easychat.common.common.constant.RedisKey;
+import com.wang.easychat.common.common.event.UserOfflineEvent;
 import com.wang.easychat.common.common.event.UserOnLineEvent;
 import com.wang.easychat.common.common.utils.RedisUtils;
 import com.wang.easychat.common.user.domain.entity.IpInfo;
@@ -38,10 +39,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @ClassDescription: 专门管理websocket的逻辑，包括推送消息，拉取消息
@@ -196,19 +198,31 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Override
     public void remove(Channel channel) {
         WSChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
-        if (Objects.nonNull(wsChannelExtraDTO)){
-            ONLINE_WS_MAP.remove(channel);
-            Long uid = wsChannelExtraDTO.getUid();
-            CopyOnWriteArrayList<Channel> channels = ONLINE_UID_MAP.get(uid);
-            if (channels.size() == 1) {
-                ONLINE_UID_MAP.remove(uid);
-            }else {
-                channels.remove(channel);
-            }
-            RedisUtils.del(RedisKey.getKey(RedisKey.USER_TOKEN_STRING, uid));
+        Optional<Long> uidOptional = Optional.ofNullable(wsChannelExtraDTO)
+                .map(WSChannelExtraDTO::getUid);
+        boolean offlineAll = offline(channel, uidOptional);
+        if (uidOptional.isPresent() && offlineAll) {//已登录用户断连,并且全下线成功
+            User user = new User();
+            user.setId(uidOptional.get());
+            user.setLastOptTime(new Date());
+            applicationEventPublisher.publishEvent(new UserOfflineEvent(this, user));
         }
+    }
 
-        // todo 用户下线
+    /**
+     * 用户下线
+     * return 是否全下线成功
+     */
+    private boolean offline(Channel channel, Optional<Long> uidOptional) {
+        ONLINE_WS_MAP.remove(channel);
+        if (uidOptional.isPresent()) {
+            CopyOnWriteArrayList<Channel> channels = ONLINE_UID_MAP.get(uidOptional.get());
+            if (CollectionUtil.isNotEmpty(channels)) {
+                channels.removeIf(ch -> Objects.equals(ch, channel));
+            }
+            return CollectionUtil.isEmpty(ONLINE_UID_MAP.get(uidOptional.get()));
+        }
+        return true;
     }
 
     @Override

@@ -43,21 +43,6 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
          userOffline(ctx.channel());
     }
 
-    /**
-     * 用户下线统一处理
-     */
-    private void userOffline(Channel channel){
-        Long uid = webSocketService.getOnLineUserMap(channel);
-        try{
-            userService.setUserActiveStatus(uid, ChatActiveStatusEnum.OFFLINE.getStatus());
-        }catch (Exception e){
-            log.info("Error => {}", e);
-        }
-        webSocketService.remove(channel);
-        RedisUtils.del(RedisKey.getKey(RedisKey.USER_TOKEN_STRING, uid));
-        channel.close();
-    }
-
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete){
@@ -86,5 +71,13 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
             case LOGIN:
                 webSocketService.handleLoginReq(channelHandlerContext.channel());
         }
+    }
+
+    /**
+     * 用户下线统一处理
+     */
+    private void userOffline(Channel channel){
+        webSocketService.remove(channel);
+        channel.close();
     }
 }

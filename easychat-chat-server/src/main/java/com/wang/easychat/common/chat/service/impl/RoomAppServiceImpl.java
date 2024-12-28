@@ -144,13 +144,13 @@ public class RoomAppServiceImpl implements IRoomAppService {
      * 创建群组
      */
     @Override
+    @Transactional
     public Long addGroup(Long uid, GroupAddReq request) {
         RoomGroup roomGroup = roomService.createGroupRoom(uid);
         // 批量保存群成员
         List<GroupMember> groupMembers = RoomAdapter.buildGroupMemberBatch(request.getUidList(), roomGroup.getId());
         groupMemberService.saveBatch(groupMembers);
-        GroupMember groupMember = groupMemberService.getByUidAndGroupId(uid, roomGroup.getId());
-        groupMembers.add(groupMember);
+
         // 发送创建群聊消息给每一个用户
         applicationEventPublisher.publishEvent(new GroupMemberAddEvent(this, roomGroup, groupMembers, uid));
 

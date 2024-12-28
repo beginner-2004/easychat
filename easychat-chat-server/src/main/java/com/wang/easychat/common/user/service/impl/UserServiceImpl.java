@@ -4,9 +4,12 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.enums.NormalOrNoEnum;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
+import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
+import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.UserBlackEvent;
 import com.wang.easychat.common.common.event.UserRegisterEvent;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.common.utils.CursorUtils;
 import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
 import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.entity.*;
@@ -237,6 +240,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .last("limit 1000") //毕竟是大群聊，人数需要做个限制
                 .select(User::getId, User::getName, User::getAvatar)
                 .list();
+    }
+
+    /**
+     * 游标翻页查找用户
+     */
+    @Override
+    public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq req, ChatActiveStatusEnum online) {
+        return CursorUtils.getCursorPageByMysql(this, req, wrapper -> {
+            wrapper.eq(User::getActiveStatus, online.getStatus());
+            wrapper.in(CollectionUtil.isNotEmpty(memberUidList), User::getId, memberUidList);
+        }, User::getLastOptTime);
     }
 
     private List<Long> getNeedSyncUidList(List<SummeryInfoReq.infoReq> reqList) {

@@ -5,6 +5,7 @@ import com.wang.easychat.common.chat.domain.entity.Message;
 import com.wang.easychat.common.chat.domain.entity.msg.MessageExtra;
 import com.wang.easychat.common.chat.domain.enums.MessageStatusEnum;
 import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
+import com.wang.easychat.common.chat.domain.vo.req.ChatMessageReq;
 import com.wang.easychat.common.chat.domain.vo.req.msg.TextMsgReq;
 import com.wang.easychat.common.chat.domain.vo.resp.msg.TextMsgResp;
 import com.wang.easychat.common.chat.service.IMessageService;
@@ -165,4 +166,6 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     public String showContactMsg(Message msg) {
         return msg.getContent();
     }
+
+
 }

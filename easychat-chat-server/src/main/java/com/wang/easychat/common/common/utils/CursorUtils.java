@@ -66,8 +66,9 @@ public class CursorUtils {
         }
         // 游标方向
         wrapper.orderByDesc(cursorColumn);
-        // todo 分页限制失效
-        Page<T> page = service.page(request.plusPage(), wrapper);
+        Page pageReq = request.plusPage();
+        pageReq.setSearchCount(false);
+        Page<T> page = service.page(pageReq, wrapper);
         // 取出游标
         String cursor = Optional.ofNullable(CollectionUtil.getLast(page.getRecords()))
                 .map(cursorColumn)

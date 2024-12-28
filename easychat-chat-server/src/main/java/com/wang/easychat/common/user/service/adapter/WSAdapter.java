@@ -2,8 +2,11 @@ package com.wang.easychat.common.user.service.adapter;
 
 import com.wang.easychat.common.chat.domain.dto.ChatMessageMarkDTO;
 import com.wang.easychat.common.chat.domain.entity.dto.ChatMsgRecallDTO;
+import com.wang.easychat.common.chat.domain.vo.resp.ChatMemberStatisticResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.chat.service.ChatService;
+import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.websocket.domain.enums.WSRespTypeEnum;
 import com.wang.easychat.common.websocket.domain.vo.resp.*;
 import org.springframework.beans.BeanUtils;
@@ -54,5 +57,29 @@ public class WSAdapter {
         mark.setMarkList(Collections.singletonList(item));
         wsBaseResp.setData(mark);
         return wsBaseResp;
+    }
+
+    public WSBaseResp<WSOnlineOfflineNotify> buildOfflineNotifyResp(User user) {
+        WSBaseResp<WSOnlineOfflineNotify> wsBaseResp = new WSBaseResp<>();
+        wsBaseResp.setType(WSRespTypeEnum.ONLINE_OFFLINE_NOTIFY.getType());
+        WSOnlineOfflineNotify onlineOfflineNotify = new WSOnlineOfflineNotify();
+        onlineOfflineNotify.setChangeList(Collections.singletonList(buildOfflineInfo(user)));
+        assembleNum(onlineOfflineNotify);
+        wsBaseResp.setData(onlineOfflineNotify);
+        return wsBaseResp;
+    }
+
+    private void assembleNum(WSOnlineOfflineNotify onlineOfflineNotify) {
+        ChatMemberStatisticResp memberStatistic = chatService.getMemberStatistic();
+        onlineOfflineNotify.setOnlineNum(memberStatistic.getOnlineNum());
+    }
+
+    private ChatMemberResp buildOfflineInfo(User user) {
+        ChatMemberResp info = new ChatMemberResp();
+        BeanUtils.copyProperties(user, info);
+        info.setUid(user.getId());
+        info.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
+        info.setLastOptTime(user.getLastOptTime());
+        return info;
     }
 }

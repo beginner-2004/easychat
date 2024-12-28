@@ -1,9 +1,12 @@
 package com.wang.easychat.common.user.service;
 
+import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
+import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.user.domain.dto.ItemInfoDTO;
 import com.wang.easychat.common.user.domain.dto.SummeryInfoDTO;
 import com.wang.easychat.common.user.domain.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wang.easychat.common.user.domain.enums.ChatActiveStatusEnum;
 import com.wang.easychat.common.user.domain.vo.req.user.BlackReq;
 import com.wang.easychat.common.user.domain.vo.req.user.ItemInfoReq;
 import com.wang.easychat.common.user.domain.vo.req.user.SummeryInfoReq;
@@ -64,4 +67,13 @@ public interface IUserService extends IService<User> {
      * @return
      */
     List<User> getMemberList();
+
+    /**
+     * 游标翻页查找用户
+     * @param memberUidList
+     * @param req
+     * @param online
+     * @return
+     */
+    CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq req, ChatActiveStatusEnum online);
 }

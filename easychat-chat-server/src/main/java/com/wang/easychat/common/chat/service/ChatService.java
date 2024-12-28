@@ -3,6 +3,7 @@ package com.wang.easychat.common.chat.service;
 import com.wang.easychat.common.chat.domain.dto.MsgReadInfoDTO;
 import com.wang.easychat.common.chat.domain.entity.Message;
 import com.wang.easychat.common.chat.domain.vo.req.*;
+import com.wang.easychat.common.chat.domain.vo.resp.ChatMemberStatisticResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageReadResp;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMessageResp;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
@@ -73,4 +74,10 @@ public interface ChatService {
      * @return
      */
     CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, MemberReq request);
+
+    /**
+     * 获取在线人数和总人数
+     * @return
+     */
+    ChatMemberStatisticResp getMemberStatistic();
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.wang.easychat.common.chat.domain.vo.req.MemberExitReq;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -49,4 +50,12 @@ public interface IGroupMemberService extends IService<GroupMember> {
      * @return
      */
     Boolean removeByGroupId(Long groupId, List<Object> uidList);
+
+    /**
+     * 查询成员的身份
+     * @param groupId
+     * @param uidList
+     * @return
+     */
+    Map<Long, Integer> getMemberMapRole(Long groupId, List<Long> uidList);
 }

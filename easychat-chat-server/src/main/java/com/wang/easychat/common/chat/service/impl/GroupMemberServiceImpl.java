@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -179,6 +180,23 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
                 .eq(GroupMember::getGroupId, groupId)
                 .in(CollectionUtil.isNotEmpty(uidList), GroupMember::getUid, uidList);
         return remove(wrapper);
+    }
+
+    /**
+     * 查询成员的身份
+     * @param groupId
+     * @param uidList
+     * @return
+     */
+    @Override
+    public Map<Long, Integer> getMemberMapRole(Long groupId, List<Long> uidList) {
+        List<GroupMember> groupMembers = lambdaQuery()
+                .in(GroupMember::getUid, uidList)
+                .eq(GroupMember::getGroupId, groupId)
+                .in(GroupMember::getRole, GroupRoleEnum.ADMIN_LIST)
+                .select(GroupMember::getUid, GroupMember::getRole)
+                .list();
+        return groupMembers.stream().collect(Collectors.toMap(GroupMember::getUid, GroupMember::getRole));
     }
 
 
