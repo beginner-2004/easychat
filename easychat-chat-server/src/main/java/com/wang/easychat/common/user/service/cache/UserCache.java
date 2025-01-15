@@ -98,14 +98,37 @@ public class UserCache {
         return RedisUtils.zCard(onlineKey);
     }
 
+    /**
+     * 判断用户是否在线
+     * @param uid
+     * @return
+     */
     public boolean isOnline(Long uid) {
         String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
         return RedisUtils.zIsMember(onlineKey, uid);
     }
 
-
+    /**
+     * 用户下线
+     * @param id
+     * @param lastOptTime
+     */
     public void offline(Long id, Date lastOptTime) {
         String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
         RedisKey.getKey(RedisKey.OFFLINE_UID_ZET);
+    }
+
+    /**
+     * 用户上线
+     * @param uid
+     * @param optTime
+     */
+    public void online(Long uid, Date optTime) {
+        String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
+        String offlineKey = RedisKey.getKey(RedisKey.OFFLINE_UID_ZET);
+        //移除离线表
+        RedisUtils.zRemove(offlineKey, uid);
+        //更新上线表
+        RedisUtils.zAdd(onlineKey, uid, optTime.getTime());
     }
 }

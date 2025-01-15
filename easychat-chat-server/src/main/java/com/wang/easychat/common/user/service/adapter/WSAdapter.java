@@ -1,5 +1,6 @@
 package com.wang.easychat.common.user.service.adapter;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.wang.easychat.common.chat.domain.dto.ChatMessageMarkDTO;
 import com.wang.easychat.common.chat.domain.entity.dto.ChatMsgRecallDTO;
 import com.wang.easychat.common.chat.domain.vo.resp.ChatMemberStatisticResp;
@@ -57,6 +58,25 @@ public class WSAdapter {
         mark.setMarkList(Collections.singletonList(item));
         wsBaseResp.setData(mark);
         return wsBaseResp;
+    }
+
+    public WSBaseResp<WSOnlineOfflineNotify> buildOnlineNotifyResp(User user) {
+        WSBaseResp<WSOnlineOfflineNotify> wsBaseResp = new WSBaseResp<>();
+        wsBaseResp.setType(WSRespTypeEnum.ONLINE_OFFLINE_NOTIFY.getType());
+        WSOnlineOfflineNotify onlineOfflineNotify = new WSOnlineOfflineNotify();
+        onlineOfflineNotify.setChangeList(Collections.singletonList(buildOnlineInfo(user)));
+        assembleNum(onlineOfflineNotify);
+        wsBaseResp.setData(onlineOfflineNotify);
+        return wsBaseResp;
+    }
+
+    private ChatMemberResp buildOnlineInfo(User user) {
+        ChatMemberResp info = new ChatMemberResp();
+        BeanUtil.copyProperties(user, info);
+        info.setUid(user.getId());
+        info.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
+        info.setLastOptTime(user.getLastOptTime());
+        return info;
     }
 
     public WSBaseResp<WSOnlineOfflineNotify> buildOfflineNotifyResp(User user) {

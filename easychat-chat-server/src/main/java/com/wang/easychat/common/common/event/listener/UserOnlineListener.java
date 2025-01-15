@@ -10,7 +10,11 @@ import com.wang.easychat.common.user.domain.enums.UserActiveStatusEnum;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.IpService;
+import com.wang.easychat.common.user.service.adapter.WSAdapter;
+import com.wang.easychat.common.user.service.cache.UserCache;
+import com.wang.easychat.common.user.service.impl.PushService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -31,6 +35,21 @@ public class UserOnlineListener {
     private IUserService userService;
     @Autowired
     private IpService ipService;
+    @Autowired
+    private UserCache userCache;
+    @Autowired
+    private PushService pushService;
+    @Autowired
+    private WSAdapter wsAdapter;
+
+    @Async
+    @EventListener(classes = UserOnLineEvent.class)
+    public void saveRedisAndPush(UserOnLineEvent event) {
+        User user = event.getUser();
+        userCache.online(user.getId(), user.getLastOptTime());
+        //推送给所有在线用户，该用户登录成功
+        pushService.sendPushMsg(wsAdapter.buildOnlineNotifyResp(event.getUser()));
+    }
 
     @Async
     @TransactionalEventListener(classes = UserOnLineEvent.class, phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
