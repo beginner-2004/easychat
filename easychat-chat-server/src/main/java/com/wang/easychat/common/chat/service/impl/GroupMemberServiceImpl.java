@@ -202,12 +202,33 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
 
     /**
      * 判断是否是群主
+     * @param groupId
+     * @param removedUid
+     * @return
      */
-    private Boolean isLord(Long groupId, Long uid) {
+    @Override
+    public Boolean isLord(Long groupId, Long removedUid) {
         GroupMember groupMember = lambdaQuery()
-                .eq(GroupMember::getUid, uid)
+                .eq(GroupMember::getUid, removedUid)
                 .eq(GroupMember::getGroupId, groupId)
                 .eq(GroupMember::getRole, GroupRoleEnum.LEADER.getType())
+                .one();
+        return ObjectUtil.isNotNull(groupMember);
+    }
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param groupId
+     * @param removedUid
+     * @return
+     */
+    @Override
+    public Boolean isManager(Long groupId, Long removedUid) {
+        GroupMember groupMember = lambdaQuery()
+                .eq(GroupMember::getUid, removedUid)
+                .eq(GroupMember::getGroupId, groupId)
+                .eq(GroupMember::getRole, GroupRoleEnum.MEMBER.getType())
                 .one();
         return ObjectUtil.isNotNull(groupMember);
     }

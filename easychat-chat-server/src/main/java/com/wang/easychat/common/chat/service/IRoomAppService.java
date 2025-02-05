@@ -69,4 +69,11 @@ public interface IRoomAppService {
      * @return
      */
     CursorPageBaseResp<ChatMemberResp> getMemberPage(MemberReq request);
+
+    /**
+     * 移除群成员
+     * @param uid
+     * @param request
+     */
+    void delMember(Long uid, MemberDelReq request);
 }

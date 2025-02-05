@@ -58,4 +58,20 @@ public interface IGroupMemberService extends IService<GroupMember> {
      * @return
      */
     Map<Long, Integer> getMemberMapRole(Long groupId, List<Long> uidList);
+
+    /**
+     * 判断是否是群主
+     * @param id
+     * @param removedUid
+     * @return
+     */
+    Boolean isLord(Long id, Long removedUid);
+
+    /**
+     * 判断是否是管理员
+     * @param groupId
+     * @param removedUid
+     * @return
+     */
+    Boolean isManager(Long groupId, Long removedUid);
 }

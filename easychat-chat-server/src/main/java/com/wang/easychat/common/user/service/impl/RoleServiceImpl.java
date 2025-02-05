@@ -9,6 +9,7 @@ import com.wang.easychat.common.user.service.cache.UserCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -35,6 +36,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
     }
 
     private boolean isAdmin(Set<Long> roleSet){
-        return roleSet.contains(RoleEnum.ADMIN.getId());
+        return Objects.requireNonNull(roleSet).contains(RoleEnum.ADMIN.getId());
     }
 }

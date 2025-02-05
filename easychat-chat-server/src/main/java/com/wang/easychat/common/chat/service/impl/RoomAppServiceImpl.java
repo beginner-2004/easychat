@@ -2,9 +2,11 @@ package com.wang.easychat.common.chat.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Pair;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.wang.easychat.common.chat.domain.dto.RoomBaseInfo;
 import com.wang.easychat.common.chat.domain.entity.*;
 import com.wang.easychat.common.chat.domain.enums.GroupRoleAPPEnum;
+import com.wang.easychat.common.chat.domain.enums.GroupRoleEnum;
 import com.wang.easychat.common.chat.domain.enums.HotFlagEnum;
 import com.wang.easychat.common.chat.domain.enums.RoomTypeEnum;
 import com.wang.easychat.common.chat.domain.vo.req.*;
@@ -14,22 +16,26 @@ import com.wang.easychat.common.chat.service.*;
 import com.wang.easychat.common.chat.service.adapter.ChatAdapter;
 import com.wang.easychat.common.chat.service.adapter.MemberAdapter;
 import com.wang.easychat.common.chat.service.adapter.RoomAdapter;
-import com.wang.easychat.common.chat.service.cache.HotRoomCache;
-import com.wang.easychat.common.chat.service.cache.RoomCache;
-import com.wang.easychat.common.chat.service.cache.RoomFriendCache;
-import com.wang.easychat.common.chat.service.cache.RoomGroupCache;
+import com.wang.easychat.common.chat.service.cache.*;
 import com.wang.easychat.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.wang.easychat.common.chat.service.strategy.msg.MsgHandlerFactory;
 import com.wang.easychat.common.common.annotation.RedissonLock;
 import com.wang.easychat.common.common.domain.vo.req.CursorPageBaseReq;
 import com.wang.easychat.common.common.domain.vo.resp.CursorPageBaseResp;
 import com.wang.easychat.common.common.event.GroupMemberAddEvent;
+import com.wang.easychat.common.common.exception.GroupErrorEnum;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.user.domain.entity.Role;
 import com.wang.easychat.common.user.domain.entity.User;
+import com.wang.easychat.common.user.domain.enums.RoleEnum;
+import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.IUserService;
 import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.user.service.cache.UserInfoCache;
+import com.wang.easychat.common.user.service.impl.PushService;
 import com.wang.easychat.common.websocket.domain.vo.resp.ChatMemberResp;
+import com.wang.easychat.common.websocket.domain.vo.resp.WSBaseResp;
+import com.wang.easychat.common.websocket.domain.vo.resp.WSMemberChange;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
@@ -75,13 +81,20 @@ public class RoomAppServiceImpl implements IRoomAppService {
     @Autowired
     private UserCache userCache;
     @Autowired
+    private GroupMemberCache groupMemberCache;
+    @Autowired
     private IGroupMemberService groupMemberService;
     @Autowired
     private IUserService userService;
     @Autowired
     private ChatService chatService;
     @Autowired
+    private PushService pushService;
+    @Autowired
+    private IRoleService roleService;
+    @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+
 
     /**
      * 游标翻页方式，获取会话列表
@@ -251,6 +264,55 @@ public class RoomAppServiceImpl implements IRoomAppService {
             memberUidList = groupMemberService.getMemberUidList(roomGroup.getId());
         }
         return chatService.getMemberPage(memberUidList, request);
+    }
+
+    /**
+     * 移除群成员
+     *
+     * @param uid
+     * @param request
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delMember(Long uid, MemberDelReq request) {
+        // 判断房间是否有误
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误");
+        RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(roomGroup, "房间号有误");
+        // 判断执行操作者是否在群中
+        GroupMember self = groupMemberService.getMember(roomGroup.getId(), uid);
+        AssertUtil.isNotEmpty(self, GroupErrorEnum.USER_NOT_IN_GROUP);
+        // 判断被移除的人是否是 管理员 或者 群主，群主不能被移除，管理员只能被群主移除
+        Long removedUid = request.getUid();
+        // 1.1.如果是群主则为非法操作
+        AssertUtil.isFalse(groupMemberService.isLord(roomGroup.getId(), removedUid), GroupErrorEnum.NOT_ALLOWED_FOR_REMOVE);
+        // 1.2.如果是管理员，判断是否是群主操作
+        if (groupMemberService.isManager(roomGroup.getId(), removedUid)){
+            Boolean isLord = groupMemberService.isLord(roomGroup.getId(), uid);
+            AssertUtil.isTrue(isLord, GroupErrorEnum.NOT_ALLOWED_FOR_REMOVE);
+        }
+        // 1.3.如果是普通成员，判断是否有权限操作
+        AssertUtil.isTrue(hasPower(self), GroupErrorEnum.NOT_ALLOWED_FOR_REMOVE);
+        GroupMember member = groupMemberService.getMember(roomGroup.getId(), removedUid);
+        AssertUtil.isNotEmpty(member, "用户已经移除");
+        groupMemberService.removeById(member.getId());
+        // 发送移除事件告知群成员
+        List<Long> memberUidList = groupMemberCache.getMemberUidList(roomGroup.getRoomId());
+        WSBaseResp<WSMemberChange> ws = MemberAdapter.buildMemberRemoveWS(roomGroup.getRoomId(), member.getUid());
+        pushService.sendPushMsg(ws, memberUidList);
+        groupMemberCache.evictMemberUidList(room.getId());
+    }
+
+    /**
+     * 判断是否有权限
+     * @param self
+     * @return
+     */
+    private boolean hasPower(GroupMember self) {
+        return Objects.equals(self.getRole(), GroupRoleEnum.LEADER.getType())
+                || Objects.equals(self.getRole(), GroupRoleEnum.MEMBER.getType())
+                || roleService.hasPower(self.getUid(), RoleEnum.ADMIN);
     }
 
     private GroupRoleAPPEnum getGroupRole(Long uid, RoomGroup roomGroup, Room room) {

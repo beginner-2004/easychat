@@ -72,6 +72,14 @@ public class RoomController {
         return ApiResult.success();
     }
 
+    @DeleteMapping("/group/member")
+    @ApiOperation("移除群聊")
+    public ApiResult<Void> delMember(@Valid @RequestBody MemberDelReq request) {
+        Long uid = RequestHolder.get().getUid();
+        roomAppService.delMember(uid, request);
+        return ApiResult.success();
+    }
+
     @GetMapping("/public/group/member/page")
     @ApiOperation("群成员列表")
     public ApiResult<CursorPageBaseResp<ChatMemberResp>> getMemberPage(@Valid MemberReq request) {
