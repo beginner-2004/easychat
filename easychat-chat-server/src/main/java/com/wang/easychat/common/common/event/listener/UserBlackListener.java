@@ -7,9 +7,11 @@ import com.wang.easychat.common.user.domain.enums.IdemporentEnum;
 import com.wang.easychat.common.user.domain.enums.ItemEnum;
 import com.wang.easychat.common.user.service.IUserBackpackService;
 import com.wang.easychat.common.user.service.IUserService;
+import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.websocket.service.WebSocketService;
 import com.wang.easychat.common.websocket.service.adapter.WebSocektAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -29,6 +31,15 @@ public class UserBlackListener {
     private WebSocketService webSocketService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private UserCache userCache;
+
+    @Async
+    @EventListener(classes = UserBlackEvent.class)
+    public void refreshRedis(UserBlackEvent event) {
+        userCache.evictBlackMap();
+        userCache.remove(event.getUser().getId());
+    }
 
     @Async
     @TransactionalEventListener(classes = UserBlackEvent.class, phase = TransactionPhase.AFTER_COMMIT)
@@ -42,4 +53,6 @@ public class UserBlackListener {
     public void changeUserStatus(UserBlackEvent event){
         userService.invalidUid(event.getUser().getId());
     }
+
+
 }

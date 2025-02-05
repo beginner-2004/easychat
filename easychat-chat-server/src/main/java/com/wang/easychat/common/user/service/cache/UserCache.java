@@ -135,4 +135,14 @@ public class UserCache {
         //更新上线表
         RedisUtils.zAdd(onlineKey, uid, optTime.getTime());
     }
+
+    // 移除用户
+    public void remove(Long uid) {
+        String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
+        String offlineKey = RedisKey.getKey(RedisKey.OFFLINE_UID_ZET);
+        //移除离线表
+        RedisUtils.zRemove(offlineKey, uid);
+        //移除上线表
+        RedisUtils.zRemove(onlineKey, uid);
+    }
 }
