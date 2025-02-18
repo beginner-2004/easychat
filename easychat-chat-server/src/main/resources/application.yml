@@ -52,7 +52,11 @@ wx:
         secret: ${easychat.wx.secret} # 公众号的appsecret
         token: ${easychat.wx.token} # 接口配置里的Token值
         aesKey: ${easychat.wx.aesKey} # 接口配置里的EncodingAESKey值
-#chatai:
+chatai:
+  deepseek:
+    api:
+      url: ${easychat.deepseek.url}
+      key: ${easychat.deepseek.key}
 #  chatgpt:
 #    use: ${easychat.chatgpt.use}
 #    AIUserId: ${easychat.chatgpt.uid}
