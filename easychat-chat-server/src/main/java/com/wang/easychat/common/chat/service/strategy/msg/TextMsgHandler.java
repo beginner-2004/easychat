@@ -8,9 +8,14 @@ import com.wang.easychat.common.chat.domain.enums.MessageTypeEnum;
 import com.wang.easychat.common.chat.domain.vo.req.ChatMessageReq;
 import com.wang.easychat.common.chat.domain.vo.req.msg.TextMsgReq;
 import com.wang.easychat.common.chat.domain.vo.resp.msg.TextMsgResp;
+import com.wang.easychat.common.chat.service.ChatService;
 import com.wang.easychat.common.chat.service.IMessageService;
 import com.wang.easychat.common.chat.service.adapter.MessageAdapter;
 import com.wang.easychat.common.chat.service.cache.MsgCache;
+import com.wang.easychat.common.chatai.domain.dto.DeepSeekRequest;
+import com.wang.easychat.common.chatai.domain.dto.DeepSeekResponse;
+import com.wang.easychat.common.chatai.service.DeepSeekService;
+import com.wang.easychat.common.common.config.ThreadPoolConfig;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.utils.AssertUtil;
 import com.wang.easychat.common.common.utils.discover.PrioritizedUrlDiscover;
@@ -21,12 +26,13 @@ import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.user.service.cache.UserInfoCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +51,16 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
     private UserInfoCache userInfoCache;
     @Autowired
     private IRoleService roleService;
+    @Value("${chatai.deepseek.api.AIUserId}")
+    private Long AIUserId;
+
+    @Autowired
+    @Qualifier("aichatExecutor")
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private DeepSeekService deepSeekService;
+    @Autowired
+    private ChatService chatService;
 
     private static final PrioritizedUrlDiscover URL_TITLE_DISCOVER = new PrioritizedUrlDiscover();
 
@@ -75,9 +91,52 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
             long batchCount = atUidList.stream().filter(Objects::nonNull).count();
             AssertUtil.equal((long) atUidList.size(), batchCount, "@用户不存在");
             boolean atAll = body.getAtUidList().contains(0L);
+
             if (atAll) {
                 AssertUtil.isTrue(roleService.hasPower(uid, RoleEnum.CHAT_MANAGER), "没有权限");
             }
+
+        }
+    }
+
+    /**
+     * ai回复拓展逻辑
+     * @param body
+     * @param uid
+     * @param msgId
+     * @param roomId
+     */
+    @Override
+    protected void chatAi(TextMsgReq body, Long uid, Long msgId, Long roomId) {
+        List<Long> atUidList = body.getAtUidList();
+        boolean atRobot = false;
+        if (atUidList.contains(AIUserId)){
+            atRobot = true;
+            atUidList.remove(AIUserId);
+        }
+
+        String question = body.getContent();
+        if (atRobot){
+            DeepSeekRequest request = new DeepSeekRequest();
+            request.setModel("deepseek-chat"); // 根据实际模型名称修改
+            DeepSeekRequest.Message msg = new DeepSeekRequest.Message("user", question);
+            ArrayList<DeepSeekRequest.Message> messages = new ArrayList<>();
+            messages.add(msg);
+            request.setMessages(messages);
+
+
+            threadPoolTaskExecutor.execute(() -> {
+                ResponseEntity<DeepSeekResponse> response = deepSeekService.getCompletion(request);
+                String answer;
+                if (response.getStatusCode().is2xxSuccessful() &&
+                        response.getBody() != null &&
+                        !response.getBody().getChoices().isEmpty()) {
+                    answer = response.getBody().getChoices().get(0).getMessage().getContent();
+                }
+                answer = "服务器开小差啦~稍等片刻再重试一下吧~";
+                chatService.sendMsg(new ChatMessageReq(roomId, MessageTypeEnum.TEXT.getType(), new TextMsgReq(answer, msgId, Collections.singletonList(uid)) ), AIUserId);
+
+            });
         }
     }
 

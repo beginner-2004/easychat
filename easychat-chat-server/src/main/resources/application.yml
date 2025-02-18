@@ -57,6 +57,7 @@ chatai:
     api:
       url: ${easychat.deepseek.url}
       key: ${easychat.deepseek.key}
+      AIUserId: ${easychat.deepseek.uid}
 #  chatgpt:
 #    use: ${easychat.chatgpt.use}
 #    AIUserId: ${easychat.chatgpt.uid}

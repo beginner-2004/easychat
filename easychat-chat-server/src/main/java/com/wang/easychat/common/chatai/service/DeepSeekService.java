@@ -1,6 +1,8 @@
 package com.wang.easychat.common.chatai.service;
 
 import com.wang.easychat.common.chatai.domain.dto.DeepSeekRequest;
+import com.wang.easychat.common.chatai.domain.dto.DeepSeekResponse;
+import org.springframework.http.ResponseEntity;
 
 /**
  * @ClassDescription:
@@ -13,5 +15,5 @@ public interface DeepSeekService {
      * @param request
      * @return
      */
-    String getCompletion(DeepSeekRequest request);
+    ResponseEntity<DeepSeekResponse> getCompletion(DeepSeekRequest request);
 }

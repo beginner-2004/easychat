@@ -43,6 +43,10 @@ public abstract class AbstractMsgHandler<Req> {
 
     }
 
+    protected void chatAi(Req body, Long uid, Long msgId, Long roomId){
+
+    }
+
     /**
      * 校验并保存消息
      */
@@ -56,6 +60,7 @@ public abstract class AbstractMsgHandler<Req> {
         Message insert = MessageAdapter.buildMsgSave(request, uid);
         // 统一保存
         messageService.save(insert);
+        chatAi(body, uid, insert.getId(), request.getRoomId());
         // 子类扩展保存
         saveMsg(insert, body);
         return insert.getId();

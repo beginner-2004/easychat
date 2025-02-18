@@ -34,7 +34,7 @@ public class DeepSeekServiceImpl implements DeepSeekService {
      * @return
      */
     @Override
-    public String getCompletion(DeepSeekRequest request) {
+    public ResponseEntity<DeepSeekResponse> getCompletion(DeepSeekRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(deepSeekProperties.getKey());
@@ -48,11 +48,6 @@ public class DeepSeekServiceImpl implements DeepSeekService {
                 DeepSeekResponse.class
         );
 
-        if (response.getStatusCode().is2xxSuccessful() &&
-                response.getBody() != null &&
-                !response.getBody().getChoices().isEmpty()) {
-            return response.getBody().getChoices().get(0).getMessage().getContent();
-        }
-        throw new RuntimeException("API request failed: " + response.getStatusCode());
+        return response;
     }
 }

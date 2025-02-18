@@ -28,6 +28,10 @@ public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer
      * websocket通信线程池
      */
     public static final String WS_EXECUTOR = "websocketExecutor";
+    /**
+     * deepseek群聊机器人通信线程池
+     */
+    public static final String AICHAT_EXECUTOR = "aichatExecutor";
 
     @Override
     public Executor getAsyncExecutor() {
@@ -70,7 +74,7 @@ public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer
         return executor;
     }
 
-    /*@Bean(AICHAT_EXECUTOR)
+    @Bean(AICHAT_EXECUTOR)
     public ThreadPoolTaskExecutor chatAiExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
@@ -80,5 +84,5 @@ public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());//满了直接丢弃，默认为不重要消息推送
         executor.setThreadFactory(new MyThreadFactory(executor));
         return executor;
-    }*/
+    }
 }
