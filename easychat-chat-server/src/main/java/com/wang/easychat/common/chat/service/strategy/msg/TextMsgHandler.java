@@ -18,6 +18,7 @@ import com.wang.easychat.common.chatai.service.DeepSeekService;
 import com.wang.easychat.common.common.config.ThreadPoolConfig;
 import com.wang.easychat.common.common.domain.enums.YesOrNoEnum;
 import com.wang.easychat.common.common.utils.AssertUtil;
+import com.wang.easychat.common.common.utils.DeepSeekThreadLocalUtil;
 import com.wang.easychat.common.common.utils.discover.PrioritizedUrlDiscover;
 import com.wang.easychat.common.common.utils.discover.domain.UrlInfo;
 import com.wang.easychat.common.user.domain.entity.User;
@@ -25,6 +26,7 @@ import com.wang.easychat.common.user.domain.enums.RoleEnum;
 import com.wang.easychat.common.user.service.IRoleService;
 import com.wang.easychat.common.user.service.cache.UserCache;
 import com.wang.easychat.common.user.service.cache.UserInfoCache;
+import com.wang.easychat.common.websocket.NettyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -132,9 +134,15 @@ public class TextMsgHandler extends AbstractMsgHandler<TextMsgReq> {
                         response.getBody() != null &&
                         !response.getBody().getChoices().isEmpty()) {
                     answer = response.getBody().getChoices().get(0).getMessage().getContent();
+                }else {
+                    answer = "服务器开小差啦~稍等片刻再重试一下吧~";
                 }
-                answer = "服务器开小差啦~稍等片刻再重试一下吧~";
-                chatService.sendMsg(new ChatMessageReq(roomId, MessageTypeEnum.TEXT.getType(), new TextMsgReq(answer, msgId, Collections.singletonList(uid)) ), AIUserId);
+                try {
+                    DeepSeekThreadLocalUtil.setIsDeepSeekThread();
+                    chatService.sendMsg(new ChatMessageReq(roomId, MessageTypeEnum.TEXT.getType(), new TextMsgReq(answer, msgId, Collections.singletonList(uid)) ), AIUserId);
+                }finally {
+                    DeepSeekThreadLocalUtil.removeIsDeepSeekThread();
+                }
 
             });
         }

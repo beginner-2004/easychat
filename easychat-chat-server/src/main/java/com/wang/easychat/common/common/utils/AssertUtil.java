@@ -51,6 +51,9 @@ public class AssertUtil {
      * @param obj
      */
     public static <T> void allCheckValidateThrow(T obj) {
+        if (DeepSeekThreadLocalUtil.getDeepSeekThread() != null && DeepSeekThreadLocalUtil.getDeepSeekThread()){
+            return;
+        }
         Set<ConstraintViolation<T>> constraintViolations = validator.validate(obj);
         if (constraintViolations.size() > 0) {
             StringBuilder errorMsg = new StringBuilder();

@@ -31,6 +31,8 @@ public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static Long DeepSeekUid = 10001L;   // deepseek群机器人uid
+
     public static Long UID_SYSTEM = 1L;//系统uid
 
     /**

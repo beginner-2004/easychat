@@ -319,7 +319,7 @@ public class ChatServiceImpl implements ChatService {
      */
     private void check(ChatMessageReq request, Long uid) {
         Room room = roomCache.get(request.getRoomId());
-        if (Objects.equals(uid, User.UID_SYSTEM)){
+        if (Objects.equals(uid, User.UID_SYSTEM) || Objects.equals(uid, User.DeepSeekUid)){
             // 系统消息跳过检验
             return;
         }
